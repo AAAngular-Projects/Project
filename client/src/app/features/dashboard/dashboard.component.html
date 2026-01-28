@@ -1,0 +1,238 @@
+<div class="dashboard">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <div class="welcome-section">
+      <h1>Welcome back, {{ currentUser()?.firstName }}!</h1>
+      <p class="subtitle">Here's your financial overview</p>
+    </div>
+    <button class="btn-refresh" (click)="refreshData()" [disabled]="isRefreshing()">
+      <svg [class.spinning]="isRefreshing()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Financial Summary Cards -->
+  <div class="summary-cards">
+    <!-- Available Funds Card -->
+    <div class="summary-card funds-card">
+      @if (!availableFunds()) {
+        <div class="loading-small">Loading...</div>
+      } @else if (availableFunds(); as funds) {
+        @if (funds && funds.amountMoney !== undefined) {
+          <div class="card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <div class="card-content">
+            <div class="card-label">Available Funds</div>
+            <div class="card-value">{{ funds.amountMoney | currency:'USD':'symbol':'1.2-2' }}</div>
+            <div class="card-meta">{{ funds.currencyName }}</div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Revenues Card -->
+    @if (accountBalance(); as balance) {
+      @if (balance && balance.revenues !== undefined) {
+        <div class="summary-card revenues-card">
+          <div class="card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+              <polyline points="17 6 23 6 23 12"></polyline>
+            </svg>
+          </div>
+          <div class="card-content">
+            <div class="card-label">Total Revenues</div>
+            <div class="card-value positive">{{ balance.revenues | currency:'USD':'symbol':'1.2-2' }}</div>
+            <div class="card-meta">{{ balance.currencyName }}</div>
+          </div>
+        </div>
+
+        <!-- Expenses Card -->
+        <div class="summary-card expenses-card">
+          <div class="card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+              <polyline points="17 18 23 18 23 12"></polyline>
+            </svg>
+          </div>
+          <div class="card-content">
+            <div class="card-label">Total Expenses</div>
+            <div class="card-value negative">{{ balance.expenses | currency:'USD':'symbol':'1.2-2' }}</div>
+            <div class="card-meta">{{ balance.currencyName }}</div>
+          </div>
+        </div>
+
+        <!-- Net Balance Card -->
+        <div class="summary-card balance-card-small">
+          <div class="card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+              <circle cx="12" cy="12" r="2"></circle>
+              <path d="M6 12h.01M18 12h.01"></path>
+            </svg>
+          </div>
+          <div class="card-content">
+            <div class="card-label">Net Balance</div>
+            <div class="card-value">{{ (+balance.revenues - +balance.expenses) | currency:'USD':'symbol':'1.2-2' }}</div>
+            <div class="card-meta">{{ balance.currencyName }}</div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Balance History Chart -->
+    <div class="card chart-card">
+      <div class="card-header">
+        <h2>Account Balance History</h2>
+      </div>
+      <div class="card-content">
+        @if (!balanceHistory()) {
+          <div class="loading">Loading chart...</div>
+        } @else if (balanceHistory(); as history) {
+          <div class="chart-container">
+            <canvas #balanceChart></canvas>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Cards/Bills Section -->
+    <div class="card bills-card">
+      <div class="card-header">
+        <h2>Your Cards & Accounts</h2>
+        <button class="btn-link" (click)="navigateToAccounts()">Manage</button>
+      </div>
+      <div class="card-content">
+        @if (!bills()) {
+          <div class="loading">Loading cards...</div>
+        } @else if (bills(); as billsData) {
+          @if (billsData && billsData.data && billsData.data.length > 0) {
+            <div class="bills-list">
+              @for (bill of billsData.data; track bill.id) {
+                <div class="bill-item">
+                  <div class="bill-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                      <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                  </div>
+                  <div class="bill-info">
+                    <div class="bill-number">**** {{ bill.accountBillNumber.slice(-4) }}</div>
+                    <div class="bill-currency">{{ bill.currency.name }}</div>
+                  </div>
+                  <div class="bill-amount">
+                    @if (bill.amountMoney) {
+                      {{ bill.amountMoney | currency:'USD':'symbol':'1.2-2' }}
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state">No cards found</div>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card transactions-card">
+      <div class="card-header">
+        <h2>Recent Transactions</h2>
+        <button class="btn-link" (click)="navigateToTransactions()">View All</button>
+      </div>
+      <div class="card-content">
+        @if (!recentTransactions()) {
+          <div class="loading">Loading transactions...</div>
+        } @else if (recentTransactions(); as response) {
+          @if (response.items && response.items.length > 0) {
+            <div class="transactions-list">
+              @for (transaction of response.items; track transaction.id) {
+                <div class="transaction-item">
+                  <div class="transaction-info">
+                    <div class="transaction-title">{{ transaction.transferTitle }}</div>
+                    <div class="transaction-meta">
+                      <span>{{ transaction.createdDate | date: 'short' }}</span>
+                      <span class="transaction-status" [class.authorized]="transaction.authorizationStatus">
+                        {{ transaction.authorizationStatus ? 'Authorized' : 'Pending' }}
+                      </span>
+                    </div>
+                    <div class="transaction-parties">
+                      From: {{ transaction.sender.firstName }} {{ transaction.sender.lastName }} →
+                      To: {{ transaction.recipient.firstName }} {{ transaction.recipient.lastName }}
+                    </div>
+                  </div>
+                  <div class="transaction-amount" [class.negative]="transaction.amountMoney < 0">
+                    {{ transaction.amountMoney | currency }}
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state">No recent transactions</div>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card actions-card">
+      <div class="card-header">
+        <h2>Quick Actions</h2>
+      </div>
+      <div class="card-content">
+        <div class="actions-grid">
+          <button class="action-btn" (click)="makeTransfer()">
+            <span class="action-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </span>
+            <span class="action-label">Make Transfer</span>
+          </button>
+          <button class="action-btn" (click)="navigateToTransactions()">
+            <span class="action-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+            </span>
+            <span class="action-label">View Transactions</span>
+          </button>
+          <button class="action-btn" (click)="navigateToAccounts()">
+            <span class="action-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21h18"></path>
+                <path d="M3 10h18"></path>
+                <path d="M5 6l7-3 7 3"></path>
+                <path d="M4 10v11"></path>
+                <path d="M20 10v11"></path>
+                <path d="M8 14v3"></path>
+                <path d="M12 14v3"></path>
+                <path d="M16 14v3"></path>
+              </svg>
+            </span>
+            <span class="action-label">Manage Accounts</span>
+          </button>
+          <button class="action-btn" (click)="navigateToSettings()">
+            <span class="action-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6m5.66-13l-4.3 4.3m-2.72 2.72L6.34 17.66M23 12h-6m-6 0H5m13.66 5.66l-4.3-4.3m-2.72-2.72l-4.3-4.3"></path>
+              </svg>
+            </span>
+            <span class="action-label">Settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
