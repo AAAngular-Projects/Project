@@ -77,4 +77,87 @@
       </button>
     </form>
   </div>
+
+  <!-- Forgot Password Modal -->
+  @if (showForgotPassword()) {
+    <div class="modal-overlay" (click)="onCloseForgotPassword()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Reset Password</h3>
+          <button type="button" class="close-button" (click)="onCloseForgotPassword()">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 8.586L2.929 1.515 1.515 2.929 8.586 10l-7.071 7.071 1.414 1.414L10 11.414l7.071 7.071 1.414-1.414L11.414 10l7.071-7.071-1.414-1.414L10 8.586z"/>
+            </svg>
+          </button>
+        </div>
+        
+        <form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmitForgotPassword()" class="forgot-password-form">
+          <p class="modal-description">Enter your email address and we'll send you a link to reset your password.</p>
+          
+          <div class="form-group">
+            <label for="emailAddress" class="form-label">Email Address</label>
+            <input
+              id="emailAddress"
+              type="email"
+              formControlName="emailAddress"
+              class="form-input"
+              placeholder="your@email.com"
+              [class.error]="forgotPasswordForm.get('emailAddress')?.invalid && forgotPasswordForm.get('emailAddress')?.touched"
+            />
+            @if (forgotPasswordForm.get('emailAddress')?.invalid && forgotPasswordForm.get('emailAddress')?.touched) {
+              <span class="error-text">Please enter a valid email address</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="locale" class="form-label">Language</label>
+            <select
+              id="locale"
+              formControlName="locale"
+              class="form-input"
+            >
+              <option value="en">English</option>
+              <option value="pl">Polski</option>
+            </select>
+          </div>
+
+          @if (successMessage()) {
+            <div class="success-message">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm-1 12L3 8l1.4-1.4L7 9.2l4.6-4.6L13 6l-6 6z"/>
+              </svg>
+              {{ successMessage() }}
+            </div>
+          }
+
+          @if (errorMessage()) {
+            <div class="error-message">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm1 13H7v-2h2v2zm0-3H7V4h2v6z"/>
+              </svg>
+              {{ errorMessage() }}
+            </div>
+          }
+
+          <div class="modal-actions">
+            <button type="button" class="cancel-button" (click)="onCloseForgotPassword()">
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              class="submit-button"
+              [disabled]="forgotPasswordForm.invalid || isLoading()"
+            >
+              @if (isLoading()) {
+                <span class="spinner"></span>
+                <span>Sending...</span>
+              } @else {
+                <span>Send Reset Link</span>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
 </div>

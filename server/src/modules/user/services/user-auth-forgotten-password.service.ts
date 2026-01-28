@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { UpdateResult } from 'typeorm';
 import { Order } from 'common/constants';
 import { ForgottenPasswordCreateDto } from '../dtos';
+import { INSTANCE_METADATA_SYMBOL } from '@nestjs/core/injector/instance-wrapper';
 
 @Injectable()
 export class UserAuthForgottenPasswordService {
@@ -67,7 +68,8 @@ export class UserAuthForgottenPasswordService {
   ): void {
     this._mailerService
       .sendMail({
-        to: user.email,
+        // to: user.email,
+        to: "selma.sghaier@insat.ucar.tn",
         from: this._configService.get('EMAIL_ADDRESS'),
         subject: this._getSubjectEmail(locale),
         template:

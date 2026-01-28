@@ -63,7 +63,7 @@ import { UserSubscriber } from 'modules/user/subscribers/user.subscriber';
         transport: {
           host: configService.get('EMAIL_HOST'),
           port: +configService.get('EMAIL_PORT'),
-          secure: true,
+          secure: false, // false for port 587 (STARTTLS), true for port 465 (SSL/TLS)
           auth: {
             user: configService.get('EMAIL_ADDRESS'),
             pass: configService.get('EMAIL_PASSWORD'),

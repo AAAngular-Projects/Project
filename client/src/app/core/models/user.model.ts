@@ -43,3 +43,8 @@ export interface LoginRequest {
   pinCode: number;
   password: string;
 }
+
+export interface ForgotPasswordRequest {
+  emailAddress: string;
+  locale: string;
+}
