@@ -109,6 +109,8 @@ export class AuthController {
     @Body() { password }: UserResetPasswordDto,
     @Req() { user },
   ) {
+    console.log('Reset Password Controller - Password received:', password ? '***' : 'MISSING');
+    console.log('Reset Password Controller - User from request:', user ? user.id : 'MISSING');
     return this._authService.handleResetPassword(password, user);
   }
 }

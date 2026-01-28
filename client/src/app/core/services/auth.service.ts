@@ -73,4 +73,16 @@ export class AuthService {
   forgotPassword(request: ForgotPasswordRequest): Observable<void> {
     return this.http.post<void>(`${this.API_URL}/Auth/password/forget`, request);
   }
+
+  resetPassword(token: string, password: string): Observable<void> {
+    return this.http.patch<void>(
+      `${this.API_URL}/Auth/password/reset`,
+      { password },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+  }
 }
