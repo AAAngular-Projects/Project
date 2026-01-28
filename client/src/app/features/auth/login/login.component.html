@@ -1,0 +1,80 @@
+<app-header />
+
+<div class="login-container">
+  <!-- Animated Background -->
+  <div class="animated-bg">
+    <div class="bubble bubble-1"></div>
+    <div class="bubble bubble-2"></div>
+    <div class="bubble bubble-3"></div>
+    <div class="bubble bubble-4"></div>
+    <div class="bubble bubble-5"></div>
+  </div>
+
+  <!-- Login Card -->
+  <div class="login-card">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <h3 class="form-title">Sign In</h3>
+      
+      <div class="form-group">
+        <label for="pinCode" class="form-label">PIN Code</label>
+        <input
+          id="pinCode"
+          type="password"
+          formControlName="pinCode"
+          class="form-input pin-input"
+          placeholder="Enter 4-6 digit PIN"
+          maxlength="6"
+          inputmode="numeric"
+          (input)="onPinInput($event)"
+          [class.error]="loginForm.get('pinCode')?.invalid && loginForm.get('pinCode')?.touched"
+        />
+        @if (loginForm.get('pinCode')?.invalid && loginForm.get('pinCode')?.touched) {
+          <span class="error-text">PIN code must be 4-6 digits</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <div class="label-with-link">
+          <label for="password" class="form-label">Password</label>
+          <button type="button" class="forgot-link" (click)="onForgotPassword()">Forgot?</button>
+        </div>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          class="form-input"
+          placeholder="Enter your password"
+          [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+        />
+        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+          <span class="error-text">Password must be at least 6 characters</span>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-message">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm1 13H7v-2h2v2zm0-3H7V4h2v6z"/>
+          </svg>
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <button 
+        type="submit" 
+        class="login-button"
+        [disabled]="loginForm.invalid || isLoading()"
+      >
+        @if (isLoading()) {
+          <span class="spinner"></span>
+          <span>Authenticating...</span>
+        } @else {
+          <span>Sign In</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0L6.59 1.41L12.17 7H0v2h12.17l-5.58 5.59L8 16l8-8z"/>
+          </svg>
+        }
+      </button>
+    </form>
+  </div>
+</div>

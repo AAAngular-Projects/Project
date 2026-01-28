@@ -20,3 +20,9 @@ If yarn not installed run :
 `npm install --global yarn`
 
 `yarn run start`
+
+# Accounts
+
+pin 27129 | pwd 123456 | ROOT_ROLE
+pin 760673 | pwd 123456 | ADMIN_ROLE
+pin 397933 | pwd 123456 | USER_ROLE
