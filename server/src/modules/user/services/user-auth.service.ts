@@ -118,12 +118,13 @@ export class UserAuthService {
     return queryBuilder.getOne();
   }
 
-  public async createUserAuth(createdUser): Promise<UserAuthEntity[]> {
+  public async createUserAuth(createdUser): Promise<{ auth: UserAuthEntity[], pinCode: number }> {
     const pinCode = await this._createPinCode();
     const auth = this._userAuthRepository.create({ ...createdUser, pinCode });
 
     try {
-      return this._userAuthRepository.save(auth);
+      const savedAuth = await this._userAuthRepository.save(auth);
+      return { auth: savedAuth, pinCode };
     } catch (error) {
       throw new CreateFailedException(error);
     }

@@ -2,7 +2,14 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
-import { User, LoginPayload, LoginRequest } from '../models';
+import {
+  User,
+  LoginPayload,
+  LoginRequest,
+  ForgotPasswordRequest,
+  RegisterRequest,
+  OauthRegisterRequest,
+} from '../models';
 import { StorageService } from './storage.service';
 
 @Injectable({
@@ -54,6 +61,10 @@ export class AuthService {
     );
   }
 
+  register(payload: RegisterRequest): Observable<User> {
+    return this.http.post<User>(`${this.API_URL}/Auth/register`, payload);
+  }
+
   logout(): Observable<void> {
     return this.http.patch<void>(`${this.API_URL}/Auth/logout`, {}).pipe(
       tap(() => {
@@ -68,5 +79,45 @@ export class AuthService {
     this.storage.clear();
     this.currentUserSignal.set(null);
     this.router.navigate(['/login']);
+  }
+
+  forgotPassword(request: ForgotPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${this.API_URL}/Auth/password/forget`, request);
+  }
+
+  resetPassword(token: string, password: string): Observable<void> {
+    return this.http.patch<void>(
+      `${this.API_URL}/Auth/password/reset`,
+      { password },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+  }
+
+  startOAuthLogin(provider: string = 'google'): void {
+    window.location.href = `${this.API_URL}/Auth/oauth/${provider}`;
+  }
+
+  completeOAuthLogin(payload: LoginPayload): void {
+    if (!payload?.token?.accessToken || !payload?.user) {
+      return;
+    }
+
+    this.storage.setToken(payload.token.accessToken);
+    this.storage.setUser(payload.user);
+    this.currentUserSignal.set(payload.user);
+  }
+
+  registerWithOauth(payload: OauthRegisterRequest): Observable<LoginPayload> {
+    return this.http
+      .post<LoginPayload>(`${this.API_URL}/Auth/oauth/google/register`, payload)
+      .pipe(
+        tap((response) => {
+          this.completeOAuthLogin(response);
+        }),
+      );
   }
 }

@@ -14,6 +14,7 @@ import { UserAuthService } from './user-auth.service';
 import { UserConfigService } from './user-config.service';
 import { CurrencyService } from 'modules/currency/services';
 import { MessageEntity } from 'modules/message/entities';
+import { UserAuthForgottenPasswordService } from './user-auth-forgotten-password.service';
 
 @Injectable()
 export class UserService {
@@ -23,6 +24,7 @@ export class UserService {
     private readonly _userConfigService: UserConfigService,
     private readonly _billService: BillService,
     private readonly _currencyService: CurrencyService,
+    private readonly _userAuthForgottenPasswordService: UserAuthForgottenPasswordService,
   ) {}
 
   @Transactional()
@@ -35,14 +37,22 @@ export class UserService {
 
       const createdUser = { ...userRegisterDto, user };
 
-      await Promise.all([
+      const [authResult] = await Promise.all([
         this._userAuthService.createUserAuth(createdUser),
         this._userConfigService.createUserConfig(createdUser),
       ]);
 
       await this._billService.createAccountBill(createdUser);
 
-      return this.getUser({ uuid: user.uuid });
+      // Send PIN code via email
+      const finalUser = await this.getUser({ uuid: user.uuid });
+      this._userAuthForgottenPasswordService.sendPinCodeEmail(
+        finalUser,
+        authResult.pinCode,
+        'en',
+      );
+
+      return finalUser;
     } catch (error) {
       throw new CreateFailedException(error);
     }
@@ -53,11 +63,13 @@ export class UserService {
   ): Promise<UserEntity | undefined> {
     const queryBuilder = this._userRepository.createQueryBuilder('user');
 
+    queryBuilder
+      .leftJoinAndSelect('user.userAuth', 'userAuth')
+      .leftJoinAndSelect('user.userConfig', 'userConfig')
+      .leftJoinAndSelect('userConfig.currency', 'currency');
+
     if (options.uuid) {
       queryBuilder
-        .leftJoinAndSelect('user.userAuth', 'userAuth')
-        .leftJoinAndSelect('user.userConfig', 'userConfig')
-        .leftJoinAndSelect('userConfig.currency', 'currency')
         .addSelect(
           (subQuery) =>
             subQuery

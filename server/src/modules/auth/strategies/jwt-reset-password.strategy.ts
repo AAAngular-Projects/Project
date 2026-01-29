@@ -31,13 +31,21 @@ export class JwtResetPasswordStrategy extends PassportStrategy(
     request: Request,
     { uuid },
   ): Promise<UserAuthForgottenPasswordEntity> {
+    console.log('JWT Reset Password Strategy - UUID from token:', uuid);
+    
     const userForgottenPassword = await this._userAuthForgottenPasswordService.getForgottenPassword(
       { uuid },
     );
 
     if (!userForgottenPassword) {
+      console.log('JWT Reset Password Strategy - User not found for UUID:', uuid);
       throw new UserNotFoundException();
     }
+
+    console.log('JWT Reset Password Strategy - Forgotten password record found:', {
+      id: userForgottenPassword.id,
+      used: userForgottenPassword.used,
+    });
 
     const token = request.headers.authorization.split('Bearer ')[1];
     const encodedToken = UtilsService.encodeString(token);
@@ -46,6 +54,8 @@ export class JwtResetPasswordStrategy extends PassportStrategy(
       userForgottenPassword,
       encodedToken,
     );
+
+    console.log('JWT Reset Password Strategy - Token validation successful');
 
     return userForgottenPassword;
   }

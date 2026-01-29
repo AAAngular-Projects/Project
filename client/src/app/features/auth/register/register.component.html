@@ -1,0 +1,196 @@
+<app-header />
+
+<app-auth-card>
+  <section card-copy class="register-copy">
+    <p class="eyebrow">Zenith Bank</p>
+    <h1>Create your banking profile</h1>
+    <p>Open secure access in a couple of guided steps. Your profile keeps all credentials synced across devices.</p>
+
+    <ul class="copy-list">
+      <li>Multi-currency account ready on day one</li>
+      <li>Secure document vault and biometric sign-in</li>
+      <li>FX rates refreshed every few minutes</li>
+    </ul>
+  </section>
+
+  <form
+    card-content
+    class="auth-form register-form"
+    [formGroup]="registerForm"
+    (ngSubmit)="submit()"
+  >
+    <div class="form-header">
+      <h3 class="form-title">Sign up</h3>
+      <div class="step-indicator">
+        @for (step of [1, 2, 3]; track step) {
+          <div class="step" [class.active]="currentStep() === step" [class.completed]="currentStep() > step">
+            @if (currentStep() > step) {
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <path d="M10.28 2.28L3.989 8.575 1.22 5.806 0 7.026l3.989 3.989L11.5 3.5z" />
+              </svg>
+            } @else {
+              <span>{{ step }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Step 1: Personal Information -->
+    @if (currentStep() === 1) {
+      <div class="step-content">
+        <h4 class="step-title">Personal information</h4>
+        
+        <div class="form-row">
+          <label class="form-field">
+            <span>First name</span>
+            <input 
+              type="text" 
+              formControlName="firstName" 
+              placeholder="Maria"
+              [class.invalid]="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched"
+            />
+            @if (registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched) {
+              <span class="error-text">First name is required</span>
+            }
+          </label>
+          <label class="form-field">
+            <span>Last name</span>
+            <input 
+              type="text" 
+              formControlName="lastName" 
+              placeholder="Ahmed"
+              [class.invalid]="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched"
+            />
+            @if (registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched) {
+              <span class="error-text">Last name is required</span>
+            }
+          </label>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Account Credentials -->
+    @if (currentStep() === 2) {
+      <div class="step-content">
+        <h4 class="step-title">Account credentials</h4>
+        
+        <label class="form-field">
+          <span>Email</span>
+          <input 
+            type="email" 
+            formControlName="email" 
+            placeholder="you@bank.com"
+            [class.invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+          />
+          @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
+            <span class="error-text">Please enter a valid email</span>
+          }
+        </label>
+
+        <label class="form-field">
+          <span>Password</span>
+          <input 
+            type="password" 
+            formControlName="password" 
+            placeholder="At least 6 characters"
+            [class.invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+          />
+          @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
+            <span class="error-text">Password must be at least 6 characters</span>
+          }
+        </label>
+      </div>
+    }
+
+    <!-- Step 3: Currency Selection -->
+    @if (currentStep() === 3) {
+      <div class="step-content">
+        <h4 class="step-title">Main currency</h4>
+        
+        <label class="form-field">
+          <span>Choose your primary currency</span>
+          <select 
+            formControlName="currency"
+            [class.invalid]="registerForm.get('currency')?.invalid && registerForm.get('currency')?.touched"
+          >
+            <option value="" disabled>Select currency</option>
+            @for (currency of currencies(); track currency.uuid) {
+              <option [value]="currency.uuid">
+                {{ currency.name }} · {{ currency.currentExchangeRate | number:'1.2-2' }}
+              </option>
+            }
+          </select>
+          @if (isLoadingCurrencies()) {
+            <small class="hint">Loading currencies...</small>
+          }
+          @if (registerForm.get('currency')?.invalid && registerForm.get('currency')?.touched) {
+            <span class="error-text">Please select a currency</span>
+          }
+        </label>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="status-message error">{{ errorMessage() }}</div>
+    }
+
+    @if (successMessage()) {
+      <div class="status-message success">{{ successMessage() }}</div>
+    }
+
+    <!-- Navigation Buttons -->
+    <div class="step-navigation">
+      @if (currentStep() > 1) {
+        <button type="button" class="ghost" (click)="previousStep()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0l1.41 1.41L3.83 7H16v2H3.83l5.58 5.59L8 16 0 8z" />
+          </svg>
+          <span>Back</span>
+        </button>
+      }
+
+      @if (currentStep() < totalSteps) {
+        <button type="button" class="primary" (click)="nextStep()">
+          <span>Next</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0L6.59 1.41 12.17 7H0v2h12.17l-5.58 5.59L8 16l8-8z" />
+          </svg>
+        </button>
+      } @else {
+        <button class="primary" type="submit" [disabled]="registerForm.invalid || isSubmitting()">
+          @if (isSubmitting()) {
+            <span class="spinner"></span>
+            <span>Creating account...</span>
+          } @else {
+            <span>Create account</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M8 0L6.59 1.41 12.17 7H0v2h12.17l-5.58 5.59L8 16l8-8z" />
+            </svg>
+          }
+        </button>
+      }
+    </div>
+
+    @if (currentStep() === 1) {
+      <div class="divider">
+        <span>or continue with</span>
+      </div>
+
+      <button type="button" class="oauth-button" (click)="loginWithGoogle()">
+        <svg viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="#4285F4" d="M533.5 278.4c0-17.4-1.4-34-4-50.2H272v95.1h146.9c-6.4 34.6-26 63.9-55.4 83.4v69.2h89.4c52.4-48.3 80.6-119.5 80.6-197.5z" />
+          <path fill="#34A853" d="M272 544.3c74.7 0 137.4-24.7 183.2-67.4l-89.4-69.2c-24.8 16.7-56.6 26.5-93.8 26.5-72 0-133-48.6-154.6-113.8H24.5v71.4C70.5 483.1 164.6 544.3 272 544.3z" />
+          <path fill="#FBBC05" d="M117.4 320.4c-10.5-31.6-10.5-65.7 0-97.3V151.7H24.5c-44.2 87.9-44.2 192.8 0 280.6l92.9-71.9z" />
+          <path fill="#EA4335" d="M272 107.7c39.6-.6 77.3 14 106.1 41.3l79.1-79.1C409.3 24.3 345.9-2.1 272 0 164.6 0 70.5 61.2 24.5 151.7l92.9 71.4C139 156.3 200 107.7 272 107.7z" />
+        </svg>
+        <span>Sign up with Google</span>
+      </button>
+
+      <div class="login-hint">
+        <span>Already have an account?</span>
+        <a routerLink="/login">Sign in</a>
+      </div>
+    }
+  </form>
+</app-auth-card>

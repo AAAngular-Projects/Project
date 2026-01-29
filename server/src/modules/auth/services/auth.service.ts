@@ -26,6 +26,7 @@ import {
   ForgottenTokenHasUsedException,
   WrongCredentialsProvidedException,
 } from '../exceptions';
+import { OauthProviderProfile } from 'modules/auth/interfaces/oauth-registration.interface';
 
 @Injectable()
 export class AuthService {
@@ -91,7 +92,7 @@ export class AuthService {
       userForgottenPasswordDto,
     );
 
-    const url = `https://bank.pietrzakadrian.com/password/reset/${token}`;
+    const url = `http://localhost:4200/reset-password?token=${token}`;
 
     return this._userAuthForgottenPasswordService.sendEmailWithToken(
       user,
@@ -104,14 +105,18 @@ export class AuthService {
     password: string,
     userAuthForgottenPasswordEntity: UserAuthForgottenPasswordEntity,
   ): Promise<void> {
+    console.log('handleResetPassword - Starting');
     console.log(
       'userAuthForgottenPasswordEntity',
       userAuthForgottenPasswordEntity,
     );
 
     if (userAuthForgottenPasswordEntity.used) {
+      console.log('handleResetPassword - Token already used');
       throw new ForgottenTokenHasUsedException();
     }
+
+    console.log('handleResetPassword - Updating password and marking token as used');
 
     await Promise.all([
       this._userAuthForgottenPasswordService.changeTokenActiveStatus(
@@ -123,18 +128,19 @@ export class AuthService {
         password,
       ),
     ]);
+
+    console.log('handleResetPassword - Password reset successful');
   }
 
   public async validateForgottenPasswordToken(
     forgottenPassword: UserAuthForgottenPasswordEntity,
     token: string,
   ): Promise<void> {
-    const isForgottenPasswordTokenMatching = await UtilsService.validateHash(
-      token,
-      forgottenPassword.hashedToken,
-    );
+    console.log('Validating forgotten password token:');
+    console.log('- Encoded token to compare:', token);
+    console.log('- Stored hashed token length:', forgottenPassword.hashedToken.length);
 
-    if (!isForgottenPasswordTokenMatching) {
+    if (token !== forgottenPassword.hashedToken) {
       throw new WrongCredentialsProvidedException();
     }
   }
@@ -149,9 +155,15 @@ export class AuthService {
       throw new WrongCredentialsProvidedException();
     }
 
-    const hashedToken = await this._getJwtForgottenPasswordAccessToken({
+    const token = await this._getJwtForgottenPasswordAccessToken({
       uuid: user.uuid,
     });
+
+    console.log('Creating forgotten password token:');
+    console.log('- JWT token length:', token.length);
+      // No operation to mark change
+      const hashedToken = UtilsService.encodeString(token); // No operation to mark change
+    console.log('- Encoded token (SHA256):', hashedToken);
 
     await this._userAuthForgottenPasswordService.createForgottenPassword({
       hashedToken,
@@ -160,7 +172,32 @@ export class AuthService {
       locale,
     });
 
-    return new ForgottenPasswordPayloadDto(hashedToken, user);
+    return new ForgottenPasswordPayloadDto(token, user);
+  }
+
+  public async createOauthRegistrationToken(
+    profile: OauthProviderProfile,
+  ): Promise<string> {
+    const expiresIn = this._configService.get<string>(
+      'OAUTH_REGISTRATION_TOKEN_TTL',
+    );
+
+    return this._jwtService.signAsync(profile, {
+      secret: this._getOauthRegistrationSecret(),
+      expiresIn: expiresIn ?? '10m',
+    });
+  }
+
+  public async verifyOauthRegistrationToken(
+    token: string,
+  ): Promise<OauthProviderProfile> {
+    try {
+      return await this._jwtService.verifyAsync(token, {
+        secret: this._getOauthRegistrationSecret(),
+      });
+    } catch (error) {
+      throw new WrongCredentialsProvidedException();
+    }
   }
 
   private async _getJwtForgottenPasswordAccessToken(payload): Promise<string> {
@@ -172,5 +209,12 @@ export class AuthService {
     });
 
     return token;
+  }
+
+  private _getOauthRegistrationSecret(): string {
+    return (
+      this._configService.get('OAUTH_REGISTRATION_TOKEN_SECRET') ||
+      this._configService.get('JWT_SECRET_KEY')
+    );
   }
 }

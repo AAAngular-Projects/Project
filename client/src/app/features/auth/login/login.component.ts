@@ -1,14 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { AuthCardComponent } from '../../../shared/components/auth-card/auth-card.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, RouterLink, AuthCardComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
@@ -18,13 +19,21 @@ export class LoginComponent {
   private readonly router = inject(Router);
 
   loginForm: FormGroup;
+  forgotPasswordForm: FormGroup;
   errorMessage = signal<string>('');
+  successMessage = signal<string>('');
   isLoading = this.authService.isLoading;
+  showForgotPassword = signal<boolean>(false);
 
   constructor() {
     this.loginForm = this.fb.group({
       pinCode: ['', [Validators.required, Validators.pattern(/^\d{4,6}$/)]],
       password: ['', [Validators.required, Validators.minLength(6)]]
+    });
+
+    this.forgotPasswordForm = this.fb.group({
+      emailAddress: ['', [Validators.required, Validators.email]],
+      locale: ['en', [Validators.required]]
     });
   }
 
@@ -36,8 +45,38 @@ export class LoginComponent {
   }
 
   onForgotPassword(): void {
-    // TODO: Implement forgot password navigation
-    console.log('Forgot password clicked');
+    this.showForgotPassword.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+  }
+
+  onCloseForgotPassword(): void {
+    this.showForgotPassword.set(false);
+    this.forgotPasswordForm.reset({ locale: 'en' });
+    this.errorMessage.set('');
+    this.successMessage.set('');
+  }
+
+  onSubmitForgotPassword(): void {
+    if (this.forgotPasswordForm.valid) {
+      this.errorMessage.set('');
+      this.successMessage.set('');
+      
+      this.authService.forgotPassword(this.forgotPasswordForm.value).subscribe({
+        next: () => {
+          this.successMessage.set('Password reset link has been sent to your email.');
+          setTimeout(() => {
+            this.onCloseForgotPassword();
+          }, 3000);
+        },
+        error: (error) => {
+          console.error('Forgot password error:', error);
+          this.errorMessage.set(
+            error.error?.message || 'Unable to process your request. Please try again.'
+          );
+        }
+      });
+    }
   }
 
   onSubmit(): void {
@@ -60,5 +99,9 @@ export class LoginComponent {
         }
       });
     }
+  }
+
+  loginWithGoogle(): void {
+    this.authService.startOAuthLogin('google');
   }
 }

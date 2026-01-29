@@ -1,22 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 
-export class UserRegisterDto {
+export class GoogleOauthRegisterDto {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
-  readonly firstName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  readonly lastName: string;
-
-  @IsString()
-  @IsEmail()
-  @IsNotEmpty()
-  @ApiProperty()
-  readonly email: string;
+  readonly token: string;
 
   @IsString()
   @MinLength(6)
@@ -31,5 +20,10 @@ export class UserRegisterDto {
   @IsString()
   @IsOptional()
   @ApiPropertyOptional()
-  readonly avatar?: string;
+  readonly firstName?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  readonly lastName?: string;
 }
