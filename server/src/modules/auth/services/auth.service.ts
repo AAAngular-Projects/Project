@@ -26,6 +26,7 @@ import {
   ForgottenTokenHasUsedException,
   WrongCredentialsProvidedException,
 } from '../exceptions';
+import { OauthProviderProfile } from 'modules/auth/interfaces/oauth-registration.interface';
 
 @Injectable()
 export class AuthService {
@@ -174,6 +175,31 @@ export class AuthService {
     return new ForgottenPasswordPayloadDto(token, user);
   }
 
+  public async createOauthRegistrationToken(
+    profile: OauthProviderProfile,
+  ): Promise<string> {
+    const expiresIn = this._configService.get<string>(
+      'OAUTH_REGISTRATION_TOKEN_TTL',
+    );
+
+    return this._jwtService.signAsync(profile, {
+      secret: this._getOauthRegistrationSecret(),
+      expiresIn: expiresIn ?? '10m',
+    });
+  }
+
+  public async verifyOauthRegistrationToken(
+    token: string,
+  ): Promise<OauthProviderProfile> {
+    try {
+      return await this._jwtService.verifyAsync(token, {
+        secret: this._getOauthRegistrationSecret(),
+      });
+    } catch (error) {
+      throw new WrongCredentialsProvidedException();
+    }
+  }
+
   private async _getJwtForgottenPasswordAccessToken(payload): Promise<string> {
     const token = await this._jwtService.signAsync(payload, {
       secret: this._configService.get('JWT_FORGOTTEN_PASSWORD_TOKEN_SECRET'),
@@ -183,5 +209,12 @@ export class AuthService {
     });
 
     return token;
+  }
+
+  private _getOauthRegistrationSecret(): string {
+    return (
+      this._configService.get('OAUTH_REGISTRATION_TOKEN_SECRET') ||
+      this._configService.get('JWT_SECRET_KEY')
+    );
   }
 }

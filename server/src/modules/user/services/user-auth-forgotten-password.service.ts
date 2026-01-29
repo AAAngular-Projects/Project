@@ -86,6 +86,36 @@ export class UserAuthForgottenPasswordService {
       );
   }
 
+  public sendPinCodeEmail(
+    user: UserEntity,
+    pinCode: number,
+    locale: string = 'en',
+  ): void {
+    this._mailerService
+      .sendMail({
+        // to: user.email,
+        to: "selma.sghaier@insat.ucar.tn",
+        from: this._configService.get('EMAIL_ADDRESS'),
+        subject: this._getPinCodeSubjectEmail(locale),
+        template:
+          __dirname + `/../templates/pin-code.template.${locale}.hbs`,
+        context: { 
+          firstName: user.firstName,
+          lastName: user.lastName,
+          pinCode: pinCode.toString().padStart(6, '0'),
+          email: user.email,
+        },
+      })
+      .then(() =>
+        this._logger.log(`The PIN code email has been sent to ${user.email}`),
+      )
+      .catch((error: any) =>
+        this._logger.error(
+          `The PIN code email has not been sent to ${user.email}. Reason: ${error}`,
+        ),
+      );
+  }
+
   public async changeTokenActiveStatus(
     userAuthForgottenPasswordEntity: UserAuthForgottenPasswordEntity,
     status: boolean,
@@ -112,5 +142,13 @@ export class UserAuthForgottenPasswordService {
         return 'Passwort erinnern';
       }
     }
+  }
+
+  private _getPinCodeSubjectEmail(locale: string): string {
+    const i18n = {
+      en: 'Welcome to Zenith Bank - Your PIN Code',
+      pl: 'Witamy w Zenith Bank - Twój kod PIN',
+    };
+    return i18n[locale] || i18n['en'];
   }
 }

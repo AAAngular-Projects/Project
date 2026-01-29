@@ -3,8 +3,74 @@
     <div class="badge">Google sign-in</div>
     <h1>{{ headline() }}</h1>
     <p>{{ description() }}</p>
-    <div class="actions">
-      <button class="primary" type="button" (click)="goToLogin()">Back to login</button>
-    </div>
+    @if (hasRegistrationToken()) {
+      <section class="profile-summary">
+        <div class="avatar" [class.placeholder]="!preview()?.avatar">
+          @if (preview()?.avatar) {
+            <img [src]="preview()?.avatar" [alt]="preview()?.firstName || 'Google avatar'" />
+          } @else {
+            <span>{{ preview()?.firstName?.[0] || preview()?.email?.[0] || 'G' }}</span>
+          }
+        </div>
+        <div>
+          <h3>{{ preview()?.firstName }} {{ preview()?.lastName }}</h3>
+          <p>{{ preview()?.email }}</p>
+        </div>
+      </section>
+
+      <form [formGroup]="registrationForm" (ngSubmit)="completeRegistration()" class="oauth-form">
+        <div class="row">
+          <label>
+            <span>First name</span>
+            <input type="text" formControlName="firstName" placeholder="Given name" />
+          </label>
+          <label>
+            <span>Last name</span>
+            <input type="text" formControlName="lastName" placeholder="Family name" />
+          </label>
+        </div>
+
+        <label>
+          <span>Create a password</span>
+          <input type="password" formControlName="password" placeholder="At least 6 characters" />
+        </label>
+
+        <label>
+          <span>Main currency</span>
+          <select formControlName="currency">
+            <option value="" disabled>Select currency</option>
+            @for (currency of currencies(); track currency.uuid) {
+              <option [value]="currency.uuid">{{ currency.name }}</option>
+            }
+          </select>
+          @if (isLoadingCurrencies()) {
+            <small class="hint">Loading currencies...</small>
+          }
+        </label>
+
+        @if (submissionError()) {
+          <div class="error">{{ submissionError() }}</div>
+        }
+
+        @if (statusMessage()) {
+          <div class="success">{{ statusMessage() }}</div>
+        }
+
+        <button class="primary" type="submit" [disabled]="registrationForm.invalid || isSubmitting()">
+          @if (isSubmitting()) {
+            <span class="spinner"></span>
+            <span>Connecting...</span>
+          } @else {
+            <span>Complete registration</span>
+          }
+        </button>
+        <button class="ghost" type="button" (click)="goToLogin()">Use another account</button>
+      </form>
+    } @else {
+      <div class="actions">
+        <button class="primary" type="button" (click)="goToLogin()">Back to login</button>
+        <button class="ghost" type="button" (click)="requestAccess()">Request access</button>
+      </div>
+    }
   </div>
 </div>

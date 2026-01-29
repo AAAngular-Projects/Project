@@ -48,3 +48,46 @@ export interface ForgotPasswordRequest {
   emailAddress: string;
   locale: string;
 }
+
+export interface RegisterRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  currency: string;
+}
+
+export interface OauthRegisterRequest {
+  token: string;
+  password: string;
+  currency: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+export interface CurrencyOption {
+  uuid: string;
+  name: string;
+  currentExchangeRate: number;
+}
+
+export interface PageMeta {
+  page: number;
+  take: number;
+  itemCount: number;
+  pageCount: number;
+}
+
+export interface CurrencyResponse {
+  data: CurrencyOption[];
+  meta: PageMeta;
+}
+
+export interface OauthRegistrationPreview {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  provider: string;
+  providerId: string;
+}
