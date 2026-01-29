@@ -21,6 +21,14 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'oauth/callback',
+    loadComponent: () => import('./features/auth/oauth-callback/oauth-callback.component').then(m => m.OauthCallbackComponent)
+  },
+  {
+    path: 'oauth/no-account',
+    loadComponent: () => import('./features/auth/oauth-no-account/oauth-no-account.component').then(m => m.OauthNoAccountComponent)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   }

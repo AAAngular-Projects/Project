@@ -265,6 +265,52 @@
   }
 }
 
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 2rem 0 1rem;
+  color: #8a9aa7;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e1d9cf;
+  }
+}
+
+.oauth-button {
+  width: 100%;
+  border: 2px solid #e1d9cf;
+  border-radius: 12px;
+  padding: 0.9rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #102937;
+  background: white;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    border-color: #f9744b;
+    box-shadow: 0 8px 20px rgba(16, 41, 55, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
 .spinner {
   width: 16px;
   height: 16px;

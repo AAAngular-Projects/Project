@@ -1,11 +1,14 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Patch,
   Post,
   Req,
+  Res,
+  UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -17,7 +20,13 @@ import {
 } from '@nestjs/swagger';
 import { RoleType } from 'common/constants';
 import { AuthUser, Roles } from 'decorators';
-import { AuthGuard, JwtResetPasswordGuard, RolesGuard } from 'guards';
+import {
+  AuthGuard,
+  GoogleOauthGuard,
+  JwtResetPasswordGuard,
+  RolesGuard,
+} from 'guards';
+import { GoogleOauthExceptionFilter } from 'filters';
 import { AuthUserInterceptor } from 'interceptors';
 import {
   LoginPayloadDto,
@@ -31,6 +40,9 @@ import { UserDto } from 'modules/user/dtos';
 import { UserEntity } from 'modules/user/entities';
 import { UserAuthService, UserService } from 'modules/user/services';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
+import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
+import { Buffer } from 'buffer';
 
 @Controller('Auth')
 @ApiTags('Auth')
@@ -39,6 +51,7 @@ export class AuthController {
     private readonly _userService: UserService,
     private readonly _userAuthService: UserAuthService,
     private readonly _authService: AuthService,
+    private readonly _configService: ConfigService,
   ) {}
 
   @Post('login')
@@ -112,5 +125,32 @@ export class AuthController {
     console.log('Reset Password Controller - Password received:', password ? '***' : 'MISSING');
     console.log('Reset Password Controller - User from request:', user ? user.id : 'MISSING');
     return this._authService.handleResetPassword(password, user);
+  }
+
+  @Get('oauth/google')
+  @UseGuards(GoogleOauthGuard)
+  async googleAuth(): Promise<void> {
+    return;
+  }
+
+  @Get('oauth/google/callback')
+  @UseGuards(GoogleOauthGuard)
+  @UseFilters(GoogleOauthExceptionFilter)
+  async googleAuthCallback(@Req() req, @Res() res: Response): Promise<void> {
+    const user = req.user as UserEntity;
+    const token = await this._authService.createToken(user);
+    const redirectUrl =
+      this._configService.get<string>('OAUTH_SUCCESS_REDIRECT_URL') ||
+      'http://localhost:4200/oauth/callback';
+
+    const url = new URL(redirectUrl);
+    url.searchParams.set('accessToken', token.accessToken);
+    url.searchParams.set('expiresIn', `${token.expiresIn}`);
+    url.searchParams.set('uuid', user.uuid);
+    const payload = new LoginPayloadDto(user.toDto(), token);
+    const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64');
+    url.searchParams.set('payload', encodedPayload);
+
+    return res.redirect(url.toString());
   }
 }

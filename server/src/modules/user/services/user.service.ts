@@ -53,11 +53,13 @@ export class UserService {
   ): Promise<UserEntity | undefined> {
     const queryBuilder = this._userRepository.createQueryBuilder('user');
 
+    queryBuilder
+      .leftJoinAndSelect('user.userAuth', 'userAuth')
+      .leftJoinAndSelect('user.userConfig', 'userConfig')
+      .leftJoinAndSelect('userConfig.currency', 'currency');
+
     if (options.uuid) {
       queryBuilder
-        .leftJoinAndSelect('user.userAuth', 'userAuth')
-        .leftJoinAndSelect('user.userConfig', 'userConfig')
-        .leftJoinAndSelect('userConfig.currency', 'currency')
         .addSelect(
           (subQuery) =>
             subQuery

@@ -99,4 +99,8 @@ export class LoginComponent {
       });
     }
   }
+
+  loginWithGoogle(): void {
+    this.authService.startOAuthLogin('google');
+  }
 }

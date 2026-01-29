@@ -85,4 +85,18 @@ export class AuthService {
       }
     );
   }
+
+  startOAuthLogin(provider: string = 'google'): void {
+    window.location.href = `${this.API_URL}/Auth/oauth/${provider}`;
+  }
+
+  completeOAuthLogin(payload: LoginPayload): void {
+    if (!payload?.token?.accessToken || !payload?.user) {
+      return;
+    }
+
+    this.storage.setToken(payload.token.accessToken);
+    this.storage.setUser(payload.user);
+    this.currentUserSignal.set(payload.user);
+  }
 }
