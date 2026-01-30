@@ -1,5 +1,6 @@
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { User } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -32,13 +33,13 @@ export class StorageService {
     }
   }
 
-  setUser(user: any): void {
+  setUser(user: User): void {
     if (this.isBrowser) {
       localStorage.setItem(this.USER_KEY, JSON.stringify(user));
     }
   }
 
-  getUser(): any {
+  getUser(): User | null {
     if (this.isBrowser) {
       const user = localStorage.getItem(this.USER_KEY);
       return user ? JSON.parse(user) : null;
