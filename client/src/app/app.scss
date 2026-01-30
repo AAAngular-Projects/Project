@@ -1,0 +1,4 @@
+.app-main {
+  margin-top: 80px; /* Account for fixed header height */
+  min-height: calc(100vh - 80px);
+}
