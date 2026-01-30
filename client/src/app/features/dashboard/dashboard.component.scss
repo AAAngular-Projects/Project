@@ -286,6 +286,20 @@
           font-weight: 600;
           color: #1a202c;
           margin-bottom: 0.25rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          .transaction-type {
+            font-weight: 700;
+            font-size: 0.875rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+          }
+
+          .separator {
+            color: #cbd5e0;
+          }
         }
 
         .transaction-meta {
@@ -317,10 +331,49 @@
       .transaction-amount {
         font-size: 1.125rem;
         font-weight: 700;
-        color: #10b981;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+
+        .amount-sign {
+          font-size: 1.25rem;
+          font-weight: 700;
+        }
+
+        &.positive {
+          color: #10b981 !important;
+          
+          * {
+            color: #10b981 !important;
+          }
+        }
 
         &.negative {
-          color: #ef4444;
+          color: #ef4444 !important;
+          
+          * {
+            color: #ef4444 !important;
+          }
+        }
+      }
+
+      // Styling for sent transactions
+      &.sent {
+        border-left: 3px solid #ef4444;
+        
+        .transaction-info .transaction-title .transaction-type {
+          background: #fee2e2;
+          color: #991b1b;
+        }
+      }
+
+      // Styling for received transactions
+      &.received {
+        border-left: 3px solid #10b981;
+        
+        .transaction-info .transaction-title .transaction-type {
+          background: #d1fae5;
+          color: #065f46;
         }
       }
     }

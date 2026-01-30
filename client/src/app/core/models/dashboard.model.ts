@@ -10,13 +10,18 @@ export interface AmountMoney {
 }
 
 export interface Bill {
-  id: string;
+  uuid: string;
   accountBillNumber: string;
   amountMoney?: string;
   currency: {
-    id: string;
+    uuid: string;
     name: string;
     currentExchangeRate: number;
+  };
+  user?: {
+    uuid: string;
+    firstName: string;
+    lastName: string;
   };
 }
 
@@ -38,27 +43,50 @@ export interface BalanceHistoryItem {
 }
 
 export interface Transaction {
-  id: string;
-  amountMoney: number;
+  uuid: string;
+  amountMoney: string;
   transferTitle: string;
   authorizationKey: string;
   authorizationStatus: boolean;
   createdDate: string;
-  recipient: {
-    id: string;
+  recipient?: {
+    uuid: string;
     firstName: string;
     lastName: string;
     email: string;
   };
-  sender: {
-    id: string;
+  sender?: {
+    uuid: string;
     firstName: string;
     lastName: string;
     email: string;
+  };
+  senderBill?: {
+    uuid: string;
+    accountBillNumber: string;
+    user?: {
+      uuid: string;
+      firstName: string;
+      lastName: string;
+    };
+  };
+  recipientBill?: {
+    uuid: string;
+    accountBillNumber: string;
+    user?: {
+      uuid: string;
+      firstName: string;
+      lastName: string;
+    };
   };
 }
 
 export interface TransactionsResponse {
-  items: Transaction[];
-  total: number;
+  data: Transaction[];
+  meta: {
+    page: number;
+    take: number;
+    itemCount: number;
+    pageCount: number;
+  };
 }

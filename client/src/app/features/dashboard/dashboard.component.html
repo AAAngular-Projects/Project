@@ -116,7 +116,7 @@
         } @else if (bills(); as billsData) {
           @if (billsData && billsData.data && billsData.data.length > 0) {
             <div class="bills-list">
-              @for (bill of billsData.data; track bill.id) {
+              @for (bill of billsData.data; track bill.uuid) {
                 <div class="bill-item">
                   <div class="bill-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -153,9 +153,9 @@
         @if (!recentTransactions()) {
           <div class="loading">Loading transactions...</div>
         } @else if (recentTransactions(); as response) {
-          @if (response.items && response.items.length > 0) {
+          @if (response.data && response.data.length > 0) {
             <div class="transactions-list">
-              @for (transaction of response.items; track transaction.id) {
+              @for (transaction of response.data; track transaction.uuid) {
                 <div class="transaction-item">
                   <div class="transaction-info">
                     <div class="transaction-title">{{ transaction.transferTitle }}</div>
@@ -166,11 +166,11 @@
                       </span>
                     </div>
                     <div class="transaction-parties">
-                      From: {{ transaction.sender.firstName }} {{ transaction.sender.lastName }} →
-                      To: {{ transaction.recipient.firstName }} {{ transaction.recipient.lastName }}
+                      From: {{ transaction.sender?.firstName }} {{ transaction.sender?.lastName }} →
+                      To: {{ transaction.recipient?.firstName }} {{ transaction.recipient?.lastName }}
                     </div>
                   </div>
-                  <div class="transaction-amount" [class.negative]="transaction.amountMoney < 0">
+                  <div class="transaction-amount" [class.negative]="+transaction.amountMoney < 0">
                     {{ transaction.amountMoney | currency }}
                   </div>
                 </div>
