@@ -26,6 +26,13 @@ export interface Message extends EntityModel {
   key: MessageKey;
 }
 
+export interface PageMeta {
+  page: number;
+  take: number;
+  itemCount: number;
+  pageCount: number;
+}
+
 export interface MessagesPage {
   data: Message[];
   meta: PageMeta;
