@@ -6,3 +6,5 @@ export * from './users-page-options.dto';
 export * from './users-page.dto';
 export * from './user-auth-forgotten-password.dto';
 export * from './forgotten-password-create.dto';
+export * from './user-role-update.dto';
+export * from './user-list.dto';

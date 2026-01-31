@@ -4,3 +4,4 @@ export * from './storage.service';
 export * from './currency.service';
 export * from './dashboard.service';
 export * from './notification.service';
+export * from './admin.service';

@@ -7,6 +7,9 @@ export class UserAuthDto extends AbstractDto {
   readonly pinCode: number;
 
   @ApiProperty()
+  readonly role: string;
+
+  @ApiProperty()
   readonly lastSuccessfulLoggedDate: Date;
 
   @ApiProperty()
@@ -18,6 +21,7 @@ export class UserAuthDto extends AbstractDto {
   constructor(userAuth: UserAuthEntity) {
     super(userAuth);
     this.pinCode = userAuth.pinCode;
+    this.role = userAuth.role;
     this.lastSuccessfulLoggedDate = userAuth.lastSuccessfulLoggedDate;
     this.lastFailedLoggedDate = userAuth.lastFailedLoggedDate;
     this.lastLogoutDate = userAuth.lastLogoutDate;

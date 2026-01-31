@@ -19,6 +19,9 @@ export class UserDto extends AbstractDto {
   @ApiProperty()
   readonly avatar: string;
 
+  @ApiProperty()
+  readonly createdAt: Date;
+
   @ApiPropertyOptional({ type: UserAuthDto })
   @IsOptional()
   readonly userAuth?: UserAuthDto;
@@ -33,6 +36,7 @@ export class UserDto extends AbstractDto {
     this.lastName = user.lastName;
     this.email = user.email;
     this.avatar = user.avatar;
+    this.createdAt = user.createdAt;
     this.userAuth = user.userAuth?.toDto();
     this.userConfig = user.userConfig?.toDto();
   }
