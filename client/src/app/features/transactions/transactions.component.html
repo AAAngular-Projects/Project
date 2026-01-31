@@ -1,0 +1,101 @@
+<div class="transactions-container">
+  <div class="header">
+    <h1>Transactions</h1>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label>Date From</label>
+      <input type="date" [formControl]="dateFromControl" />
+    </div>
+    <div class="filter-group">
+      <label>Date To</label>
+      <input type="date" [formControl]="dateToControl" />
+    </div>
+    <div class="filter-group">
+      <label>Type</label>
+      <select [formControl]="typeControl">
+        <option [ngValue]="null">All Transactions</option>
+        <option [ngValue]="TransactionType.INCOMING">Incoming</option>
+        <option [ngValue]="TransactionType.OUTGOING">Outgoing</option>
+      </select>
+    </div>
+  </div>
+
+  @if (transactions.isLoading()) {
+    <div class="loading">Loading transactions...</div>
+  }
+
+  @if (transactions.error()) {
+    <div class="error">Error loading transactions.</div>
+  }
+
+  @if (transactions.value(); as pageData) {
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Title</th>
+            <th>Sender</th>
+            <th>Recipient</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of pageData.data; track t.uuid) {
+            <tr>
+              <td>
+                <div class="date">{{ t.createdAt | date:'mediumDate' }}</div>
+                <div class="time">{{ t.createdAt | date:'shortTime' }}</div>
+              </td>
+              <td>{{ t.transferTitle }}</td>
+              <td>
+                <div class="user">{{ t.senderBill.user?.firstName }} {{ t.senderBill.user?.lastName }}</div>
+                <div class="account">{{ t.senderBill.accountBillNumber | maskAccountNumber }}</div>
+              </td>
+              <td>
+                <div class="user">{{ t.recipientBill.user?.firstName }} {{ t.recipientBill.user?.lastName }}</div>
+                <div class="account">{{ t.recipientBill.accountBillNumber | maskAccountNumber }}</div>
+              </td>
+              <td class="amount">
+                {{ t.amountMoney | currency:(t.senderBill.currency?.name || 'USD') }}
+              </td>
+              <td>
+                <span class="status" [class.confirmed]="t.authorizationStatus" [class.pending]="!t.authorizationStatus">
+                  {{ t.authorizationStatus ? 'Confirmed' : 'Pending' }}
+                </span>
+              </td>
+              <td>
+                @if (t.authorizationStatus) {
+                  <button class="btn-pdf" (click)="onDownload(t.uuid)">PDF</button>
+                }
+              </td>
+            </tr>
+          }
+          @if (pageData.data.length === 0) {
+            <tr>
+              <td colspan="7" class="empty">No transactions found</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button 
+        [disabled]="!pageData.meta.hasPreviousPage" 
+        (click)="setPage(page() - 1)">
+        Previous
+      </button>
+      <span>Page {{ page() }} of {{ pageData.meta.pageCount }}</span>
+      <button 
+        [disabled]="!pageData.meta.hasNextPage" 
+        (click)="setPage(page() + 1)">
+        Next
+      </button>
+    </div>
+  }
+</div>
