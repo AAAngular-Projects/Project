@@ -5,7 +5,7 @@ export class ModifyCurrencyForHistory1738327822000 implements MigrationInterface
     // Add a recordedAt column to track when each exchange rate was recorded
     await queryRunner.query(`
       ALTER TABLE currency 
-      ADD COLUMN "recordedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      ADD COLUMN "recorded_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     `);
 
     // Remove the unique constraint on name to allow multiple historical records
@@ -22,7 +22,7 @@ export class ModifyCurrencyForHistory1738327822000 implements MigrationInterface
     // Add a composite unique constraint on name + recordedAt to prevent duplicate records
     await queryRunner.query(`
       CREATE UNIQUE INDEX "IDX_currency_name_recorded_at" 
-      ON currency ("name", "recordedAt")
+      ON currency ("name", "recorded_at")
     `);
   }
 
@@ -41,7 +41,7 @@ export class ModifyCurrencyForHistory1738327822000 implements MigrationInterface
     // Remove the recordedAt column
     await queryRunner.query(`
       ALTER TABLE currency 
-      DROP COLUMN "recordedAt"
+      DROP COLUMN "recorded_at"
     `);
   }
 }

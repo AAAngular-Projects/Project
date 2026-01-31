@@ -9,15 +9,15 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
+    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent),
   },
   {
     path: 'register',
-    loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent)
+    loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent),
   },
   {
     path: 'reset-password',
-    loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+    loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
   },
   {
     path: 'dashboard',
@@ -26,11 +26,11 @@ export const routes: Routes = [
   },
   {
     path: 'oauth/callback',
-    loadComponent: () => import('./features/auth/oauth-callback/oauth-callback.component').then(m => m.OauthCallbackComponent)
+    loadComponent: () => import('./features/auth/oauth-callback/oauth-callback.component').then(m => m.OauthCallbackComponent),
   },
   {
     path: 'oauth/no-account',
-    loadComponent: () => import('./features/auth/oauth-no-account/oauth-no-account.component').then(m => m.OauthNoAccountComponent)
+    loadComponent: () => import('./features/auth/oauth-no-account/oauth-no-account.component').then(m => m.OauthNoAccountComponent),
   },
   {
     path: 'messages',
@@ -38,25 +38,23 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-    path: '**',
-    loadComponent: () => import('./features/not-found/not-found.component').then(m => m.NotFoundComponent)
     path: 'accounts',
     loadComponent: () => import('./features/accounts/accounts.component').then(m => m.AccountsComponent),
     canActivate: [authGuard],
     children: [
       {
         path: '',
-        loadComponent: () => import('./features/accounts/account-details/account-details.component').then(m => m.AccountDetailsComponent)
+        loadComponent: () => import('./features/accounts/account-details/account-details.component').then(m => m.AccountDetailsComponent),
       },
       {
         path: ':id',
-        loadComponent: () => import('./features/accounts/account-details/account-details.component').then(m => m.AccountDetailsComponent)
+        loadComponent: () => import('./features/accounts/account-details/account-details.component').then(m => m.AccountDetailsComponent),
       }
     ]
   },
   {
     path: '**',
-    redirectTo: 'dashboard'
+    loadComponent: () => import('./features/not-found/not-found.component').then(m => m.NotFoundComponent),
   }
 ];
  

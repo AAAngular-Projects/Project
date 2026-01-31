@@ -53,7 +53,7 @@
           [class.messages__item--unread]="!message.readed"
           (click)="selectMessage(message)"
         >
-          <p class="messages__item-title">{{ message.templates?.[0]?.subject || 'No subject' }}</p>
+          <p class="messages__item-title">{{ message.templates[0]?.subject || 'No subject' }}</p>
           <p class="messages__item-subtitle">
             From {{ message.sender.firstName }} {{ message.sender.lastName }} ·
             {{ message.createdAt | date: 'short' }}
