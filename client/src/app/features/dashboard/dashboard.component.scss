@@ -145,8 +145,12 @@
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .card {
@@ -211,6 +215,11 @@
 }
 
 .bills-card {
+  .card-content {
+    height: 300px;
+    overflow-y: auto;
+  }
+
   .bills-list {
     display: flex;
     flex-direction: column;
@@ -260,6 +269,11 @@
 }
 
 .transactions-card {
+  .card-content {
+    height: 300px;
+    overflow-y: auto;
+  }
+
   .transactions-list {
     display: flex;
     flex-direction: column;
@@ -381,10 +395,17 @@
 }
 
 .actions-card {
+  .card-content {
+    height: 300px;
+    display: flex;
+    align-items: center;
+  }
+
   .actions-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+    width: 100%;
 
     .action-btn {
       display: flex;

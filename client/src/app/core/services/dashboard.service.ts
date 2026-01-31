@@ -29,7 +29,10 @@ export class DashboardService {
 
   balanceHistory = signal<BalanceHistoryItem[]>([]);
 
-  recentTransactions = signal<TransactionsResponse>({ items: [], total: 0 });
+  recentTransactions = signal<TransactionsResponse>({ 
+    data: [], 
+    meta: { page: 1, take: 5, itemCount: 0, pageCount: 0 } 
+  });
 
   /**
    * Load all dashboard data
@@ -101,7 +104,10 @@ export class DashboardService {
       .pipe(
         catchError(err => {
           console.error('Error loading transactions:', err);
-          return of({ items: [], total: 0 } as TransactionsResponse);
+          return of({ 
+            data: [], 
+            meta: { page: 1, take: 5, itemCount: 0, pageCount: 0 } 
+          } as TransactionsResponse);
         })
       )
       .subscribe(data => this.recentTransactions.set(data));

@@ -60,6 +60,23 @@ export class TransactionController {
     return this._transactionService.getTransactions(user, pageOptionsDto);
   }
 
+  @Get('/bill/:billId')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleType.USER, RoleType.ADMIN, RoleType.ROOT)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Get transactions for a specific bill',
+    type: TransactionsPageDto,
+  })
+  async getTransactionsByBill(
+    @Param('billId') billId: string,
+    @Query(new ValidationPipe({ transform: true }))
+    pageOptionsDto: TransactionsPageOptionsDto,
+    @AuthUser() user: UserEntity,
+  ): Promise<TransactionsPageDto> {
+    return this._transactionService.getTransactionsByBill(billId, user, pageOptionsDto);
+  }
+
   @Post('create')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleType.USER, RoleType.ADMIN, RoleType.ROOT)

@@ -1,0 +1,79 @@
+<div class="accounts-container">
+  <div class="accounts-header">
+    <h2>My Accounts</h2>
+    <p class="subtitle">Select an account to view details</p>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading...</p>
+    </div>
+  } @else if (error()) {
+    <div class="error-state">
+      <p class="error-message">{{ error() }}</p>
+      <button class="retry-btn" (click)="loadAccounts()">Retry</button>
+    </div>
+  } @else if (accounts().length === 0) {
+    <div class="empty-state">
+      <p>No accounts found</p>
+    </div>
+  } @else {
+    <div class="accounts-list">
+      @for (account of accounts(); track trackByAccountId($index, account)) {
+        <a 
+          class="account-item" 
+          [class]="getAccountTypeClass(account.accountType)"
+          [class.active]="isAccountSelected(account.id)"
+          [routerLink]="[account.id]"
+          routerLinkActive="active">
+          
+          <div class="account-item-icon">
+            @switch (getAccountIcon(account.accountType)) {
+              @case ('credit-card') {
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                  <line x1="1" y1="10" x2="23" y2="10"></line>
+                </svg>
+              }
+              @case ('piggy-bank') {
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2h0V5z"></path>
+                  <path d="M2 9v1c0 1.1.9 2 2 2h1"></path>
+                  <path d="M16 11h0"></path>
+                </svg>
+              }
+              @case ('diamond') {
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41l-7.59-7.59a2.41 2.41 0 0 0-3.41 0z"></path>
+                </svg>
+              }
+              @default {
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path>
+                  <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path>
+                  <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4z"></path>
+                </svg>
+              }
+            }
+          </div>
+
+          <div class="account-item-content">
+            <div class="account-item-header">
+              <h3 class="account-name">{{ account.nickname || account.accountType }}</h3>
+              <span class="account-type">{{ account.accountType }}</span>
+            </div>
+            
+            <div class="account-number-mini">
+              {{ account.accountNumber | maskAccountNumber }}
+            </div>
+
+            <div class="account-balance-mini" [class.negative]="account.balance < 0">
+              {{ account.balance | currency: account.currency }}
+            </div>
+          </div>
+        </a>
+      }
+    </div>
+  }
+</div>

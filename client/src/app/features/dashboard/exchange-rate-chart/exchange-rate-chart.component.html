@@ -1,0 +1,37 @@
+<div class="exchange-rate-chart-container">
+  <div class="chart-header">
+    <div class="header-content">
+      <div>
+        <h3>Exchange Rate History</h3>
+        <p class="chart-subtitle">Track currency exchange rates over time</p>
+      </div>
+      @if (currencies().length > 0) {
+        <div class="currency-selector">
+          <select 
+            [ngModel]="selectedCurrencyId()" 
+            (ngModelChange)="onCurrencyChange($event)"
+            class="currency-select">
+            @for (currency of currencies(); track currency.uuid) {
+              <option [value]="currency.uuid">{{ currency.name }}</option>
+            }
+          </select>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading exchange rates...</p>
+    </div>
+  } @else if (exchangeRateHistory().length === 0) {
+    <div class="empty-state">
+      <p>No exchange rate history available</p>
+    </div>
+  } @else {
+    <div class="chart-wrapper">
+      <canvas #exchangeRateChart></canvas>
+    </div>
+  }
+</div>

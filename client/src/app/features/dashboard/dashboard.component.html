@@ -5,12 +5,6 @@
       <h1>Welcome back, {{ currentUser()?.firstName }}!</h1>
       <p class="subtitle">Here's your financial overview</p>
     </div>
-    <button class="btn-refresh" (click)="refreshData()" [disabled]="isRefreshing()">
-      <svg [class.spinning]="isRefreshing()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-      </svg>
-      Refresh
-    </button>
   </div>
 
   <!-- Financial Summary Cards -->
@@ -104,45 +98,6 @@
       </div>
     </div>
 
-    <!-- Cards/Bills Section -->
-    <div class="card bills-card">
-      <div class="card-header">
-        <h2>Your Cards & Accounts</h2>
-        <button class="btn-link" (click)="navigateToAccounts()">Manage</button>
-      </div>
-      <div class="card-content">
-        @if (!bills()) {
-          <div class="loading">Loading cards...</div>
-        } @else if (bills(); as billsData) {
-          @if (billsData && billsData.data && billsData.data.length > 0) {
-            <div class="bills-list">
-              @for (bill of billsData.data; track bill.uuid) {
-                <div class="bill-item">
-                  <div class="bill-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                      <line x1="1" y1="10" x2="23" y2="10"></line>
-                    </svg>
-                  </div>
-                  <div class="bill-info">
-                    <div class="bill-number">**** {{ bill.accountBillNumber.slice(-4) }}</div>
-                    <div class="bill-currency">{{ bill.currency.name }}</div>
-                  </div>
-                  <div class="bill-amount">
-                    @if (bill.amountMoney) {
-                      {{ bill.amountMoney | currency:'USD':'symbol':'1.2-2' }}
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="empty-state">No cards found</div>
-          }
-        }
-      </div>
-    </div>
-
     <!-- Recent Transactions -->
     <div class="card transactions-card">
       <div class="card-header">
@@ -182,6 +137,48 @@
         }
       </div>
     </div>
+
+    <!-- Cards/Bills Section -->
+    <div class="card bills-card">
+      <div class="card-header">
+        <h2>Your Cards & Accounts</h2>
+        <button class="btn-link" (click)="navigateToAccounts()">Manage</button>
+      </div>
+      <div class="card-content">
+        @if (!bills()) {
+          <div class="loading">Loading cards...</div>
+        } @else if (bills(); as billsData) {
+          @if (billsData && billsData.data && billsData.data.length > 0) {
+            <div class="bills-list">
+              @for (bill of billsData.data; track bill.uuid) {
+                <div class="bill-item">
+                  <div class="bill-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                      <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                  </div>
+                  <div class="bill-info">
+                    <div class="bill-number">**** {{ bill.accountBillNumber.slice(-4) }}</div>
+                    <div class="bill-currency">{{ bill.currency.name }}</div>
+                  </div>
+                  <div class="bill-amount">
+                    @if (bill.amountMoney) {
+                      {{ bill.amountMoney | currency:'USD':'symbol':'1.2-2' }}
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state">No cards found</div>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Exchange Rate History Chart -->
+    <app-exchange-rate-chart></app-exchange-rate-chart>
 
     <!-- Quick Actions -->
     <div class="card actions-card">

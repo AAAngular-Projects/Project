@@ -2,11 +2,11 @@ import { AbstractEntity } from 'common/entities';
 import { BillEntity } from 'modules/bill/entities';
 import { CurrencyDto } from 'modules/currency/dtos';
 import { UserConfigEntity } from 'modules/user/entities';
-import { Column, Entity, OneToMany, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, OneToMany, UpdateDateColumn, CreateDateColumn } from 'typeorm';
 
 @Entity({ name: 'currency' })
 export class CurrencyEntity extends AbstractEntity<CurrencyDto> {
-  @Column({ unique: true })
+  @Column()
   name: string;
 
   @Column('float')
@@ -14,6 +14,13 @@ export class CurrencyEntity extends AbstractEntity<CurrencyDto> {
 
   @Column({ default: false })
   base: boolean;
+
+  @Column({
+    type: 'timestamp with time zone',
+    default: () => 'CURRENT_TIMESTAMP',
+    name: 'recorded_at',
+  })
+  recordedAt: Date;
 
   @UpdateDateColumn({
     type: 'timestamp with time zone',

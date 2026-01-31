@@ -1,24 +1,26 @@
-import { Component, inject, signal, effect, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, effect, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, DestroyRef } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { DashboardService, AuthService } from '../../core/services';
 import { Chart, registerables } from 'chart.js';
+import { ExchangeRateChartComponent } from './exchange-rate-chart/exchange-rate-chart.component';
 
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, CurrencyPipe, DatePipe, ExchangeRateChartComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('balanceChart', { static: false }) balanceChartRef!: ElementRef<HTMLCanvasElement>;
-  
   private readonly dashboardService = inject(DashboardService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  
+  @ViewChild('balanceChart', { static: false }) balanceChartRef!: ElementRef<HTMLCanvasElement>;
   
   private chart: Chart | null = null;
   
@@ -31,8 +33,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   
   // Current user from auth service
   currentUser = this.authService.currentUser;
-  
-  isRefreshing = signal(false);
   
   constructor() {
     effect(() => {
@@ -120,12 +120,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
     });
-  }
-  
-  refreshData(): void {
-    this.isRefreshing.set(true);
-    this.dashboardService.refreshData();
-    setTimeout(() => this.isRefreshing.set(false), 1000);
   }
   
   navigateToTransactions(): void {
