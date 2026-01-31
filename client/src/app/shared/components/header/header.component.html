@@ -6,8 +6,20 @@
       <p class="brand-subtitle">Secure Banking System</p>
     </div>
   </div>
-  <nav class="header-nav">
+  
+  <!-- Only show navigation when authenticated -->
+  <nav class="header-nav" *ngIf="isAuthenticated()">
     <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
     <a routerLink="/messages" routerLinkActive="active">Messages</a>
+    <a routerLink="/notifications" routerLinkActive="active">Notifications</a>
+    
+    <div class="user-menu">
+      <span class="user-name" *ngIf="currentUser()">
+        {{ currentUser()?.firstName }} {{ currentUser()?.lastName }}
+      </span>
+      <button type="button" class="logout-btn" (click)="logout()">
+        Logout
+      </button>
+    </div>
   </nav>
 </header>

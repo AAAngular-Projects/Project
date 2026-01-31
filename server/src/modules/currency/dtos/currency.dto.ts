@@ -9,9 +9,13 @@ export class CurrencyDto extends AbstractDto {
   @ApiProperty()
   readonly currentExchangeRate: number;
 
+  @ApiProperty()
+  readonly recordedAt: Date;
+
   constructor(currency: CurrencyEntity) {
     super(currency);
     this.name = currency.name;
     this.currentExchangeRate = currency.currentExchangeRate;
+    this.recordedAt = currency.recordedAt;
   }
 }

@@ -1,0 +1,104 @@
+<div class="notifications-container">
+  <div class="notifications-header">
+    <h2>Recent Transactions</h2>
+    <button 
+      class="btn-refresh" 
+      (click)="refresh()" 
+      [disabled]="loading"
+      [attr.aria-label]="'Refresh notifications'">
+      🔄
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading notifications...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <p class="error-message">{{ error }}</p>
+    <button class="btn-retry" (click)="refresh()">Try Again</button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && transactions.length === 0" class="empty-container">
+    <div class="empty-icon">📭</div>
+    <h3>No notifications</h3>
+    <p>You don't have any recent transactions.</p>
+  </div>
+
+  <!-- Transactions List -->
+  <div *ngIf="!loading && !error && transactions.length > 0" class="transactions-list">
+    <div 
+      *ngFor="let transaction of transactions; trackBy: trackByTransactionId"
+      class="transaction-item"
+      [class.incoming]="isIncomingTransaction(transaction)">
+      
+      <div class="transaction-details">
+        <div class="transaction-header">
+          <h4 class="transaction-title">{{ transaction.transferTitle }}</h4>
+          <span class="transaction-amount" 
+                [class.positive]="isIncomingTransaction(transaction)"
+                [class.negative]="!isIncomingTransaction(transaction)">
+            {{ isIncomingTransaction(transaction) ? '+' : '-' }}{{ formatAmount(transaction.amountMoney, transaction.recipientBill?.currency?.name) }}
+          </span>
+        </div>
+        
+        <div class="transaction-meta">
+          <div class="transaction-accounts">
+            <span class="account-info">
+              <strong>From:</strong>
+              <span *ngIf="transaction.senderBill?.user" class="user-name">
+                {{ transaction.senderBill?.user?.firstName }} {{ transaction.senderBill?.user?.lastName }}
+              </span>
+              <span *ngIf="!transaction.senderBill?.user" class="user-name">
+                {{ transaction.senderBill?.accountBillNumber }}
+              </span>
+            </span>
+            <span class="account-info">
+              <strong>To:</strong>
+              <span *ngIf="transaction.recipientBill?.user" class="user-name">
+                {{ transaction.recipientBill?.user?.firstName }} {{ transaction.recipientBill?.user?.lastName }}
+              </span>
+              <span *ngIf="!transaction.recipientBill?.user" class="user-name">
+                {{ transaction.recipientBill?.accountBillNumber }}
+              </span>
+            </span>
+          </div>
+          
+          <div class="transaction-status-date">
+            <span class="transaction-status" 
+                  [class.authorized]="transaction.authorizationStatus"
+                  [class.pending]="!transaction.authorizationStatus">
+              {{ transaction.authorizationStatus ? 'Authorized' : 'Pending' }}
+            </span>
+            <span class="transaction-date">{{ formatDate(transaction.updatedAt) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && !error && totalPages > 1" class="pagination-container">
+    <button 
+      class="btn-page" 
+      [disabled]="currentPage === 1"
+      (click)="onPageChange(currentPage - 1)">
+      Previous
+    </button>
+    
+    <span class="page-info">
+      Page {{ currentPage }} of {{ totalPages }} ({{ totalItems }} total)
+    </span>
+    
+    <button 
+      class="btn-page" 
+      [disabled]="currentPage === totalPages"
+      (click)="onPageChange(currentPage + 1)">
+      Next
+    </button>
+  </div>
+</div>

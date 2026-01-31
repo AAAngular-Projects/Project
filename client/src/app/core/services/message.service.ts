@@ -37,10 +37,6 @@ export class MessageService {
     return this.http.get<MessagesPage>(this.API_URL, { params });
   }
 
-  createMessageObservable(payload: CreateMessagePayload): Observable<Message> {
-    return this.http.post<Message>(this.API_URL, payload);
-  }
-
   markAsReadObservable(payload: ReadMessagePayload = {}): Observable<void> {
     return this.http.patch<void>(this.API_URL, payload);
   }
@@ -113,5 +109,19 @@ export class MessageService {
         }),
       )
       .subscribe();
+  }
+
+  createMessageObservable(payload: CreateMessagePayload): Observable<Message> {
+    console.log('Sending message payload:', payload);
+    return this.http.post<Message>(this.API_URL, payload).pipe(
+      tap({
+        next: (message) => {
+          console.log('Message created successfully:', message);
+        },
+        error: (error) => {
+          console.error('HTTP Error creating message:', error);
+        }
+      })
+    );
   }
 }

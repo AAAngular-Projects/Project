@@ -43,7 +43,7 @@ export class AuthService {
     this.loadUserFromStorage();
   }
 
-  private loadUserFromStorage(): void {
+  loadUserFromStorage(): void {
     const token = this.storage.getToken();
     const user = this.storage.getUser();
 
@@ -55,6 +55,10 @@ export class AuthService {
   private setAuthenticatedUser(user: User): void {
     const role = this.resolveRole(user);
     const enrichedUser = role ? { ...user, role } : user;
+
+    console.log('Setting authenticated user:', enrichedUser);
+    console.log('User UUID:', enrichedUser.uuid);
+    console.log('User Auth:', enrichedUser.userAuth);
 
     this.storage.setUser(enrichedUser);
     this.currentUserSignal.set(enrichedUser);
@@ -123,7 +127,7 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<LoginPayload> {
     this.isLoadingSignal.set(true);
     
-    return this.http.post<LoginPayload>(`${this.API_URL}/Auth/login`, credentials).pipe(
+    return this.http.post<LoginPayload>(`${this.API_URL}/auth/login`, credentials).pipe(
       tap({
         next: (response) => {
           this.storage.setToken(response.token.accessToken);
@@ -142,7 +146,7 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
-    return this.http.patch<void>(`${this.API_URL}/Auth/logout`, {}).pipe(
+    return this.http.patch<void>(`${this.API_URL}/auth/logout`, {}).pipe(
       tap(() => {
         this.storage.clear();
         this.currentUserSignal.set(null);

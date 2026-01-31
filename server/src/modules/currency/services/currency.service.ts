@@ -64,6 +64,8 @@ export class CurrencyService {
     currentExchangeRate: number,
     base: boolean,
   ): Promise<void> {
+    // Insert new row for exchange rate history tracking
+    // Each new rate gets its own row with the current timestamp
     const queryBuilder = this._currencyRepository.createQueryBuilder(
       'currency',
     );
@@ -71,11 +73,6 @@ export class CurrencyService {
     await queryBuilder
       .insert()
       .values({ name, currentExchangeRate, base })
-      .onConflict(
-        `("name") DO UPDATE
-                SET current_exchange_rate = :currentExchangeRate`,
-      )
-      .setParameter('currentExchangeRate', currentExchangeRate)
       .execute();
   }
 
@@ -131,5 +128,28 @@ export class CurrencyService {
       .catch((error) => {
         throw new ForeignExchangeRatesNotFoundException(error);
       });
+  }
+
+  public async getExchangeRateHistory(
+    currencyId: string,
+  ): Promise<CurrencyEntity[]> {
+    // Find the currency by UUID to get its name
+    const currency = await this._currencyRepository.findOne({
+      where: { uuid: currencyId },
+    });
+
+    if (!currency) {
+      return [];
+    }
+
+    // Get all historical records for this currency name, ordered by recordedAt
+    const queryBuilder = this._currencyRepository.createQueryBuilder(
+      'currency',
+    );
+
+    return queryBuilder
+      .where('currency.name = :name', { name: currency.name })
+      .orderBy('currency.recordedAt', 'ASC')
+      .getMany();
   }
 }
