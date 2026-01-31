@@ -1,10 +1,12 @@
-import { Component, inject, signal, resource } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { TransactionService } from '@core/services/transaction.service';
 import { TransactionType } from '@core/models/transaction.model';
 import { MaskAccountNumberPipe } from '@shared/pipes/mask-account-number.pipe';
-import { firstValueFrom } from 'rxjs';
+import { of, concat } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-transactions',
@@ -46,19 +48,36 @@ export class TransactionsComponent {
     });
   }
 
-  readonly transactions = resource({
-    request: () => ({
-      page: this.page(),
-      take: this.pageSize(),
-      order: this.order(),
-      dateFrom: this.dateFrom(),
-      dateTo: this.dateTo(),
-      type: this.type(),
-    }),
-    loader: ({ request }) => {
-      return firstValueFrom(this.transactionService.getTransactions(request));
-    },
-  });
+  // Reactive state derivation using declarative pattern
+  private readonly requestParams = computed(() => ({
+    page: this.page(),
+    take: this.pageSize(),
+    order: this.order(),
+    dateFrom: this.dateFrom(),
+    dateTo: this.dateTo(),
+    type: this.type(),
+  }));
+
+  private readonly transactionsState = toSignal(
+    toObservable(this.requestParams).pipe(
+      switchMap(params => 
+        concat(
+          of({ status: 'loading' as const, data: undefined, error: undefined }),
+          this.transactionService.getTransactions(params).pipe(
+            map(data => ({ status: 'success' as const, data, error: undefined })),
+            catchError(error => of({ status: 'error' as const, data: undefined, error }))
+          )
+        )
+      )
+    ),
+    { initialValue: { status: 'loading' as const, data: undefined, error: undefined } }
+  );
+
+  readonly transactions = {
+    value: computed(() => this.transactionsState().data),
+    isLoading: computed(() => this.transactionsState().status === 'loading'),
+    error: computed(() => this.transactionsState().status === 'error' ? this.transactionsState().error : null),
+  };
 
   onDownload(uuid: string) {
     this.transactionService.downloadConfirmation(uuid).subscribe({

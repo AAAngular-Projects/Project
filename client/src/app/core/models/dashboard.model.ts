@@ -42,7 +42,7 @@ export interface BalanceHistoryItem {
   balance: number;
 }
 
-export interface Transaction {
+export interface DashboardTransaction {
   uuid: string;
   amountMoney: string;
   transferTitle: string;
@@ -82,7 +82,7 @@ export interface Transaction {
 }
 
 export interface TransactionsResponse {
-  data: Transaction[];
+  data: DashboardTransaction[];
   meta: {
     page: number;
     take: number;

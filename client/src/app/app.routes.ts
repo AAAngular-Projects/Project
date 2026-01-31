@@ -20,11 +20,6 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
   },
   {
-    path: 'transactions',
-    loadComponent: () => import('./features/transactions/transactions.component').then(m => m.TransactionsComponent),
-    canActivate: [authGuard]
-  },
-  {
     path: 'dashboard',
     loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [authGuard]
@@ -36,6 +31,11 @@ export const routes: Routes = [
   {
     path: 'oauth/no-account',
     loadComponent: () => import('./features/auth/oauth-no-account/oauth-no-account.component').then(m => m.OauthNoAccountComponent),
+  },
+    {
+    path: 'transactions',
+    loadComponent: () => import('./features/transactions/transactions.component').then(m => m.TransactionsComponent),
+    canActivate: [authGuard]
   },
   {
     path: 'messages',
