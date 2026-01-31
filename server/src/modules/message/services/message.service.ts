@@ -4,7 +4,7 @@ import { PageMetaDto } from 'common/dtos';
 import { UserEntity } from 'modules/user/entities';
 import { MessagesPageOptionsDto, MessagesPageDto } from 'modules/message/dtos';
 import { CreateMessageDto } from '../dtos';
-import { UserService } from 'modules/user/services';
+import { UserService, UserAuthService } from 'modules/user/services';
 import {
   MessageKeyService,
   MessageTemplateService,
@@ -23,6 +23,7 @@ export class MessageService {
     @Inject(forwardRef(() => MessageTemplateService))
     private readonly _messageTemplateService: MessageTemplateService,
     private readonly _userService: UserService,
+    private readonly _userAuthService: UserAuthService,
   ) {}
 
   public async getMessages(
@@ -91,22 +92,60 @@ export class MessageService {
   public async createMessage(
     createMessageDto: CreateMessageDto,
   ): Promise<MessageEntity | any> {
-    const [recipient, sender, key] = await Promise.all([
-      this._userService.getUser({ uuid: createMessageDto.recipient }),
-      this._userService.getUser({ uuid: createMessageDto.sender }),
-      this._messageKeyService.getMessageKey({ uuid: createMessageDto.key }),
-    ]);
+    console.log('Creating message with DTO:', createMessageDto);
+    
+    try {
+      // Find users by pin code
+      console.log('Looking up sender with PIN:', createMessageDto.senderPinCode);
+      console.log('Looking up recipient with PIN:', createMessageDto.recipientPinCode);
+      
+      const [recipient, sender] = await Promise.all([
+        this._userAuthService.findUserAuth({ pinCode: createMessageDto.recipientPinCode }),
+        this._userAuthService.findUserAuth({ pinCode: createMessageDto.senderPinCode }),
+      ]);
 
-    const message = this._messageRepository.create({ recipient, sender, key });
-    await this._messageRepository.save(message);
+      console.log('Found recipient:', recipient ? recipient.uuid : 'null');
+      console.log('Found sender:', sender ? sender.uuid : 'null');
 
-    const createdMessage = { message, ...createMessageDto };
+      if (!recipient) {
+        console.error(`Recipient not found with PIN code: ${createMessageDto.recipientPinCode}`);
+        throw new Error(`Recipient not found with PIN code: ${createMessageDto.recipientPinCode}`);
+      }
+      
+      if (!sender) {
+        console.error(`Sender not found with PIN code: ${createMessageDto.senderPinCode}`);
+        throw new Error(`Sender not found with PIN code: ${createMessageDto.senderPinCode}`);
+      }
 
-    const templates = await this._messageTemplateService.createMessageTemplate(
-      createdMessage,
-    );
+      // Try to get message key by name (since we're passing a string name)
+      console.log('Looking up message key:', createMessageDto.key);
+      let key = await this._messageKeyService.getMessageKey({ name: createMessageDto.key });
+      
+      console.log('Found message key:', key ? key.uuid : 'null');
 
-    return { ...message, templates: templates.toDtos() };
+      if (!key) {
+        console.error(`Message key not found: ${createMessageDto.key}`);
+        throw new Error(`Message key not found: ${createMessageDto.key}`);
+      }
+
+      console.log('Creating message with recipient:', recipient.id, 'sender:', sender.id, 'key:', key.id);
+      const message = this._messageRepository.create({ recipient, sender, key });
+      const savedMessage = await this._messageRepository.save(message);
+      
+      console.log('Message created successfully:', savedMessage.uuid);
+
+      const createdMessage = { message: savedMessage, ...createMessageDto };
+
+      const templates = await this._messageTemplateService.createMessageTemplate(
+        createdMessage,
+      );
+
+      console.log('Templates created:', templates);
+      return { ...savedMessage, templates: templates.toDtos() };
+    } catch (error) {
+      console.error('Error creating message:', error);
+      throw error;
+    }
   }
 
   public async readMessages(

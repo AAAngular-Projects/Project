@@ -11,6 +11,7 @@ import {
   Post,
   Body,
   Patch,
+  Param,
 } from '@nestjs/common';
 import { MessageService } from 'modules/message/services';
 import {
@@ -25,6 +26,7 @@ import { UserEntity } from 'modules/user/entities';
 import { AuthGuard, RolesGuard } from 'guards';
 import { AuthUserInterceptor } from 'interceptors';
 import { RoleType } from 'common/constants';
+import { UserAuthService } from 'modules/user/services';
 
 @Controller('Messages')
 @ApiTags('Messages')
@@ -32,7 +34,10 @@ import { RoleType } from 'common/constants';
 @UseInterceptors(AuthUserInterceptor)
 @ApiBearerAuth()
 export class MessageController {
-  constructor(private readonly _messageService: MessageService) {}
+  constructor(
+    private readonly _messageService: MessageService,
+    private readonly _userAuthService: UserAuthService,
+  ) {}
 
   @Get('/')
   @HttpCode(HttpStatus.OK)
@@ -61,7 +66,27 @@ export class MessageController {
   async createMessage(
     @Body() createMessageDto: CreateMessageDto,
   ): Promise<MessageDto | any> {
-    return this._messageService.createMessage(createMessageDto);
+    console.log('Message controller received DTO:', createMessageDto);
+    
+    // Validate PIN codes
+    if (!createMessageDto.senderPinCode || createMessageDto.senderPinCode < 100000 || createMessageDto.senderPinCode > 999999) {
+      console.error('Invalid sender PIN code:', createMessageDto.senderPinCode);
+      throw new Error(`Invalid sender PIN code: ${createMessageDto.senderPinCode}`);
+    }
+    
+    if (!createMessageDto.recipientPinCode || createMessageDto.recipientPinCode < 100000 || createMessageDto.recipientPinCode > 999999) {
+      console.error('Invalid recipient PIN code:', createMessageDto.recipientPinCode);
+      throw new Error(`Invalid recipient PIN code: ${createMessageDto.recipientPinCode}`);
+    }
+    
+    try {
+      const result = await this._messageService.createMessage(createMessageDto);
+      console.log('Message service returned:', result);
+      return result;
+    } catch (error) {
+      console.error('Error in message controller:', error);
+      throw error;
+    }
   }
 
   @Patch('/')
@@ -77,5 +102,49 @@ export class MessageController {
     @Body() readMessageDto: ReadMessageDto,
   ): Promise<MessageDto | any> {
     return this._messageService.readMessages(user, readMessageDto);
+  }
+
+  // Debug endpoint to test PIN lookup
+  @Get('/debug/pin/:pinCode')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleType.ADMIN, RoleType.ROOT)
+  async debugPinLookup(
+    @Param('pinCode') pinCode: string,
+  ): Promise<any> {
+    try {
+      const pinCodeNumber = parseInt(pinCode);
+      console.log('Looking up user with PIN:', pinCodeNumber);
+      
+      const user = await this._userAuthService.findUserAuth({ pinCode: pinCodeNumber });
+      console.log('Found user:', user ? {
+        id: user.id,
+        uuid: user.uuid,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        userAuth: user.userAuth ? {
+          id: user.userAuth.id,
+          uuid: user.userAuth.uuid,
+          pinCode: user.userAuth.pinCode,
+          role: user.userAuth.role
+        } : null
+      } : null);
+      
+      return {
+        pinCode: pinCodeNumber,
+        found: !!user,
+        user: user ? {
+          id: user.id,
+          uuid: user.uuid,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          userAuth: user.userAuth
+        } : null
+      };
+    } catch (error) {
+      console.error('Error in debug PIN lookup:', error);
+      throw error;
+    }
   }
 }

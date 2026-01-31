@@ -31,6 +31,16 @@ export class LanguageService {
     return queryBuilder.getOne();
   }
 
+  public async getLanguageByCode(code: string): Promise<LanguageEntity> {
+    const queryBuilder = this._languageRepository.createQueryBuilder(
+      'language',
+    );
+
+    queryBuilder.where('language.code = :code', { code });
+
+    return queryBuilder.getOne();
+  }
+
   public async setLanguages(): Promise<void> {
     const languages = await this.getLanguages();
 

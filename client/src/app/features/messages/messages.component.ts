@@ -69,12 +69,11 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return role === RoleType.USER || role === RoleType.ADMIN || role === RoleType.ROOT;
   });
 
-  // Form for creating messages
+  // Form for creating messages (simplified)
   readonly createMessageForm: FormGroup = this.fb.group({
-    sender: ['', Validators.required],
-    recipient: ['', Validators.required],
-    key: ['', Validators.required],
-    templates: this.fb.array([this.createTemplateGroup()]),
+    recipient: ['', [Validators.required, Validators.pattern(/^[0-9]{6}$/), Validators.min(100000), Validators.max(999999)]],
+    subject: ['', Validators.required],
+    content: ['', Validators.required],
   });
 
   readonly selectedMessage: WritableSignal<Message | null> = signal(null);
@@ -122,16 +121,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
       });
   }
 
-  get templates(): FormArray<FormGroup> {
-    return this.createMessageForm.get('templates') as FormArray<FormGroup>;
-  }
-
   trackByUuid(_: number, item: Message): string {
     return item.uuid;
-  }
-
-  trackByIndex(index: number): number {
-    return index;
   }
 
   selectMessage(message: Message): void {
@@ -170,22 +161,11 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.createFormVisible.update(visible => !visible);
     if (!this.createFormVisible()) {
       this.createMessageForm.reset();
-      this.resetTemplatesArray();
     }
   }
 
   refreshMessages(): void {
     this.loadMessages();
-  }
-
-  addTemplate(): void {
-    this.templates.push(this.createTemplateGroup());
-  }
-
-  removeTemplate(index: number): void {
-    if (this.templates.length > 1) {
-      this.templates.removeAt(index);
-    }
   }
 
   submit(): void {
@@ -200,12 +180,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
             // Add the new message to the top of the list
             this.messagesSignal.update(messages => [message, ...messages]);
             this.createMessageForm.reset();
-            this.resetTemplatesArray();
             this.createFormVisible.set(false);
             this.isCreatingMessage.set(false);
           },
           error: (error) => {
             console.error('Error creating message:', error);
+            alert('Error creating message: ' + (error.error?.message || error.message || 'Unknown error'));
             this.isCreatingMessage.set(false);
           }
         });
@@ -214,39 +194,39 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
   }
 
-  private resetTemplatesArray(): void {
-    this.templates.clear();
-    this.templates.push(this.createTemplateGroup());
-  }
-
   private buildCreateMessagePayload(): CreateMessagePayload {
-    const sender = (this.createMessageForm.get('sender')?.value as string).trim();
-    const recipient = (this.createMessageForm.get('recipient')?.value as string).trim();
-    const key = (this.createMessageForm.get('key')?.value as string).trim();
+    const currentUser = this.currentUser();
+    if (!currentUser) {
+      throw new Error('No authenticated user found');
+    }
 
-    const templates: CreateMessageTemplatePayload[] = this.templates.controls
-      .map((group) => group.value)
-      .map((template) => ({
-        language: template.language?.trim(),
-        subject: template.subject?.trim(),
-        content: template.content?.trim(),
-        actions: template.actions ? template.actions.trim() : undefined,
-      }));
+    if (!currentUser.userAuth?.pinCode) {
+      throw new Error('Current user does not have a valid PIN code');
+    }
+
+    const recipientPinCode = parseInt(this.createMessageForm.get('recipient')?.value as string);
+    const subject = (this.createMessageForm.get('subject')?.value as string).trim();
+    const content = (this.createMessageForm.get('content')?.value as string).trim();
+
+    if (isNaN(recipientPinCode)) {
+      throw new Error('Recipient PIN code must be a valid number');
+    }
+
+    console.log('Creating message with sender PIN:', currentUser.userAuth.pinCode);
+    console.log('Creating message with recipient PIN:', recipientPinCode);
+
+    // Create a simple template with just subject and content
+    const templates: CreateMessageTemplatePayload[] = [{
+      language: 'en', // Default to English
+      subject,
+      content,
+    }];
 
     return {
-      sender,
-      recipient,
-      key,
+      senderPinCode: currentUser.userAuth.pinCode,
+      recipientPinCode,
+      key: 'WELCOME_MESSAGE', // Use predefined message key name - backend will handle UUID lookup
       templates,
     } as CreateMessagePayload;
-  }
-
-  private createTemplateGroup(): FormGroup {
-    return this.fb.group({
-      language: ['', Validators.required],
-      subject: ['', Validators.required],
-      content: ['', Validators.required],
-      actions: new FormControl<string | null>(null),
-    });
   }
 }
