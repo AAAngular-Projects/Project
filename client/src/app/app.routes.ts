@@ -34,6 +34,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'login'
+    loadComponent: () => import('./features/not-found/not-found.component').then(m => m.NotFoundComponent)
   }
 ];
