@@ -56,8 +56,8 @@ export interface CreateMessageTemplatePayload {
 }
 
 export interface CreateMessagePayload {
-  sender: string;
-  recipient: string;
+  senderPinCode: number;
+  recipientPinCode: number;
   key: string;
   templates: CreateMessageTemplatePayload[];
 }

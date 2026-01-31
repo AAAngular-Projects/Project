@@ -1,17 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsArray } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsArray } from 'class-validator';
 import { CreateMessageTemplateDto } from './create-message-template.dto';
 
 export class CreateMessageDto {
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
   @ApiProperty()
-  readonly sender: string;
+  readonly senderPinCode: number;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
   @ApiProperty()
-  readonly recipient: string;
+  readonly recipientPinCode: number;
 
   @IsString()
   @IsNotEmpty()

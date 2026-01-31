@@ -48,6 +48,10 @@ export class AuthService {
     const role = this.resolveRole(user);
     const enrichedUser = role ? { ...user, role } : user;
 
+    console.log('Setting authenticated user:', enrichedUser);
+    console.log('User UUID:', enrichedUser.uuid);
+    console.log('User Auth:', enrichedUser.userAuth);
+
     this.storage.setUser(enrichedUser);
     this.currentUserSignal.set(enrichedUser);
     this.userRoleSignal.set(role);
