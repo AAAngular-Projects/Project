@@ -390,4 +390,6 @@ Temporary Items
 docker-compose.yml
 .env
 dist
+
+# Yarn
 yarn.lock

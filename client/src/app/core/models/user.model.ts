@@ -27,7 +27,8 @@ export interface UserConfig extends EntityModel {
   currency: Currency;
 }
 
-export interface User extends EntityModel {
+export interface User {
+  uuid: string;
   firstName: string;
   lastName: string;
   email: string;

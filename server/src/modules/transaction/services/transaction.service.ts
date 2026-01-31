@@ -92,6 +92,53 @@ export class TransactionService {
     return new TransactionsPageDto(transactions.toDtos(), pageMetaDto);
   }
 
+  public async getTransactionsByBill(
+    billId: string,
+    user: UserEntity,
+    pageOptionsDto: TransactionsPageOptionsDto,
+  ): Promise<TransactionsPageDto | undefined> {
+    const queryBuilder = this._transactionRepository.createQueryBuilder(
+      'transactions',
+    );
+
+    const [transactions, transactionsCount] = await queryBuilder
+      .addSelect([
+        'recipientUser.uuid',
+        'recipientUser.firstName',
+        'recipientUser.lastName',
+        'recipientUser.avatar',
+        'senderUser.uuid',
+        'senderUser.firstName',
+        'senderUser.lastName',
+        'senderUser.avatar',
+      ])
+      .leftJoinAndSelect('transactions.senderBill', 'senderBill')
+      .leftJoinAndSelect('transactions.recipientBill', 'recipientBill')
+      .leftJoin('recipientBill.user', 'recipientUser')
+      .leftJoinAndSelect('recipientBill.currency', 'recipientBillCurrency')
+      .leftJoin('senderBill.user', 'senderUser')
+      .leftJoinAndSelect('senderBill.currency', 'senderBillCurrency')
+      .where(
+        '(senderBill.uuid = :billId OR recipientBill.uuid = :billId)',
+      )
+      .andWhere(':user IN ("senderUser"."id", "recipientUser"."id")')
+      .andWhere('transactions.authorizationStatus = true')
+      .orderBy('transactions.updatedAt', pageOptionsDto.order)
+      .addOrderBy('transactions.id', pageOptionsDto.order)
+      .setParameter('billId', billId)
+      .setParameter('user', user.id)
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take)
+      .getManyAndCount();
+
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto,
+      itemCount: transactionsCount,
+    });
+
+    return new TransactionsPageDto(transactions.toDtos(), pageMetaDto);
+  }
+
   public async getTransaction(
     options: Partial<{
       uuid: string;

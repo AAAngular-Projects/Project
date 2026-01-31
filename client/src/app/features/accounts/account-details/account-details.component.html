@@ -1,0 +1,76 @@
+<div class="account-details-container">
+  @if (!id) {
+    <!-- Placeholder when no account selected -->
+    <div class="placeholder-container">
+      <div class="placeholder-content">
+        <div class="placeholder-icon">
+          <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+        </div>
+        
+        <h2>Select an Account</h2>
+        <p class="subtitle">Choose an account from the list to view its details and transactions</p>
+      </div>
+    </div>
+  } @else if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading account details...</p>
+    </div>
+  } @else if (error()) {
+    <div class="error-state">
+      <p class="error-message">{{ error() }}</p>
+      <button class="retry-btn" (click)="loadAccountDetails()">Retry</button>
+    </div>
+  } @else if (account(); as acc) {
+    <!-- Account Summary Card -->
+    <div class="account-summary">
+      <div class="account-header">
+        <div class="account-info">
+          <h1>{{ acc.nickname || acc.accountType }}</h1>
+          <p class="account-type">{{ acc.accountType }} Account</p>
+          <p class="account-number">{{ acc.accountNumber | maskAccountNumber:4 }}</p>
+        </div>
+        <div class="account-balance-card">
+          <span class="balance-label">Available Balance</span>
+          <span class="balance-amount" [class.negative]="acc.balance < 0">
+            {{ acc.balance | currency: acc.currency }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Balance History Chart -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h2>Account Balance History</h2>
+        <p class="chart-subtitle">Balance progression over time</p>
+      </div>
+
+      @if (transactions().length === 0) {
+        <div class="empty-transactions">
+          <p>No transaction history available</p>
+        </div>
+      } @else {
+        <div class="chart-container">
+          <canvas #balanceChart></canvas>
+        </div>
+        
+        <div class="transaction-stats">
+          <div class="stat-item">
+            <span class="stat-label">Total Transactions</span>
+            <span class="stat-value">{{ transactions().length }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Current Balance</span>
+            <span class="stat-value" [class.negative]="acc.balance < 0">
+              {{ acc.balance | currency: acc.currency }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
