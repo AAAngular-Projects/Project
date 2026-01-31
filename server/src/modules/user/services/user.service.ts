@@ -108,6 +108,25 @@ export class UserService {
     return queryBuilder.getCount();
   }
 
+  public async getAllUsers(): Promise<UserEntity[]> {
+    const queryBuilder = this._userRepository.createQueryBuilder('user');
+
+    queryBuilder
+      .leftJoinAndSelect('user.userAuth', 'userAuth')
+      .leftJoinAndSelect('user.userConfig', 'userConfig')
+      .leftJoinAndSelect('userConfig.currency', 'currency')
+      .orderBy('user.createdAt', 'DESC');
+
+    return queryBuilder.getMany();
+  }
+
+  public async deleteUser(uuid: string): Promise<void> {
+    const user = await this.getUser({ uuid });
+    if (user) {
+      await this._userRepository.delete(user.id);
+    }
+  }
+
   public async updateUserData(
     user: UserEntity,
     userUpdateDto: UserUpdateDto,

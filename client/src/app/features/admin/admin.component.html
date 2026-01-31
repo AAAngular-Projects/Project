@@ -1,0 +1,455 @@
+<div class="admin-panel">
+  <!-- Header Section -->
+  <div class="admin-header">
+    <div class="welcome-section">
+      <h1>Admin Panel</h1>
+      <p class="subtitle">Manage users and system settings</p>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button 
+      class="tab-button" 
+      [class.active]="selectedTab() === 'overview'"
+      (click)="switchTab('overview')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+      </svg>
+      Overview
+    </button>
+    <button 
+      class="tab-button" 
+      [class.active]="selectedTab() === 'users'"
+      (click)="switchTab('users')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      Users
+    </button>
+  </div>
+
+  <!-- Overview Tab -->
+  @if (selectedTab() === 'overview') {
+    <div class="overview-section">
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon users-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value">{{ totalUsers() }}</div>
+            <div class="stat-trend neutral">All accounts</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon active-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Active Users</div>
+            <div class="stat-value">{{ activeUsersCount() }}</div>
+            <div class="stat-trend positive">Last 30 days</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon new-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">New Users</div>
+            <div class="stat-value">{{ newUsersCount() }}</div>
+            <div class="stat-trend positive">Last 30 days</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-columns">
+        <!-- Recent Activity -->
+        <div class="dashboard-card activity-card">
+          <div class="card-header">
+            <h3>Recent Signups</h3>
+            <button class="btn-link" (click)="switchTab('users')">View All</button>
+          </div>
+          <div class="activity-list">
+            @for (user of recentActivity(); track user.uuid) {
+              <div class="activity-item">
+                <div class="user-avatar-small">
+                  {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
+                </div>
+                <div class="activity-info">
+                  <span class="activity-user">{{ user.firstName }} {{ user.lastName }}</span>
+                  <span class="activity-email">{{ user.email }}</span>
+                </div>
+                <div class="activity-time">
+                  {{ formatDate(user.createdAt) }}
+                </div>
+              </div>
+            }
+            @if (recentActivity().length === 0) {
+              <div class="empty-state">No recent activity</div>
+            }
+          </div>
+        </div>
+
+        <!-- Quick Actions & Permissions -->
+        <div class="right-column">
+          <div class="dashboard-card actions-card">
+            <h3>Quick Actions</h3>
+            <div class="quick-actions-grid">
+              <button class="action-btn primary" (click)="openCreateUserModal()">
+                <div class="icon-wrapper">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </div>
+                <span>Add User</span>
+              </button>
+              
+              <button class="action-btn" (click)="switchTab('users'); searchQuery.set('ADMIN_ROLE')">
+                <div class="icon-wrapper">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </div>
+                <span>View Admins</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="dashboard-card info-card">
+            <h3>System Overview</h3>
+            <div class="system-stats">
+              <div class="system-stat-item">
+                <div class="stat-icon-small">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-label">Your Role</span>
+                  <span class="stat-value">{{ getRoleLabel(currentUser()?.userAuth?.role || '') }}</span>
+                </div>
+              </div>
+              <div class="system-stat-item">
+                <div class="stat-icon-small">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-label">Last Login</span>
+                  <span class="stat-value">{{ formatDate(currentUser()?.userAuth?.lastSuccessfulLoggedDate) }}</span>
+                </div>
+              </div>
+              <div class="system-stat-item">
+                <div class="stat-icon-small">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-label">Total Users</span>
+                  <span class="stat-value">{{ totalUsers() }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Users Tab -->
+  @if (selectedTab() === 'users') {
+    <div class="users-section">
+      <div class="users-header">
+        <h2>User Management</h2>
+        <button class="btn-create" (click)="openCreateUserModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Create User
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input 
+            type="text" 
+            class="search-input" 
+            placeholder="Search by name, email, or role..."
+            [value]="searchQuery()"
+            (input)="onSearchInput($event)"
+            (focus)="showAutocomplete.set(searchQuery().length >= 2)"
+            (blur)="onSearchBlur()"
+          />
+          @if (searchQuery()) {
+            <button class="clear-search" (click)="clearSearch()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          }
+        </div>
+
+        <!-- Autocomplete Dropdown -->
+        @if (showAutocomplete() && autocompleteSuggestions().length > 0) {
+          <div class="autocomplete-dropdown">
+            @for (suggestion of autocompleteSuggestions(); track suggestion) {
+              <div class="autocomplete-item" (click)="selectSuggestion(suggestion)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                {{ suggestion }}
+              </div>
+            }
+          </div>
+        }
+
+        @if (searchQuery() && filteredUsers().length === 0) {
+          <div class="no-results">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <p>No users found matching "{{ searchQuery() }}"</p>
+          </div>
+        }
+      </div>
+
+      @defer (on viewport; prefetch on idle) {
+        <div class="users-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>PIN</th>
+                <th>Role</th>
+                <th>Last Login</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of filteredUsers(); track user.uuid) {
+                <tr>
+                  <td>
+                    <div class="user-info">
+                      <div class="user-avatar">
+                        {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
+                      </div>
+                      <span>{{ user.firstName }} {{ user.lastName }}</span>
+                    </div>
+                  </td>
+                  <td>{{ user.email }}</td>
+                  <td>
+                    <span class="pin-code">{{ user.userAuth?.pinCode || 'N/A' }}</span>
+                  </td>
+                  <td>
+                    <div class="role-cell">
+                      <span class="role-badge" [class]="getRoleClass(user.userAuth?.role || '')">
+                        {{ getRoleLabel(user.userAuth?.role || '') }}
+                      </span>
+                      @if (canChangeRole()) {
+                        <button class="btn-edit-role" (click)="openEditRoleModal(user)" title="Edit Role">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                  <td>{{ formatDate(user.userAuth?.lastSuccessfulLoggedDate) }}</td>
+                  <td>{{ formatDate(user.createdAt) }}</td>
+                  <td>
+                    @if (user.uuid !== currentUser()?.uuid) {
+                      <button class="btn-delete" (click)="confirmDelete(user.uuid)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        Delete
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @placeholder {
+        <div class="loading">Loading users...</div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Create User Modal -->
+@if (showCreateUserModal()) {
+  <div class="modal-overlay" (click)="closeCreateUserModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Create New User</h2>
+        <button class="btn-close" (click)="closeCreateUserModal()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>First Name</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newUser().firstName"
+            (ngModelChange)="newUser.set({...newUser(), firstName: $event})"
+            placeholder="Enter first name">
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newUser().lastName"
+            (ngModelChange)="newUser.set({...newUser(), lastName: $event})"
+            placeholder="Enter last name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input 
+            type="email" 
+            [(ngModel)]="newUser().email"
+            (ngModelChange)="newUser.set({...newUser(), email: $event})"
+            placeholder="Enter email">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input 
+            type="password" 
+            [(ngModel)]="newUser().password"
+            (ngModelChange)="newUser.set({...newUser(), password: $event})"
+            placeholder="Enter password">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeCreateUserModal()">Cancel</button>
+        <button class="btn-primary" (click)="createUser()">Create User</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-content small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Confirm Delete</h2>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="cancelDelete()">Cancel</button>
+        <button class="btn-danger" (click)="deleteUser(showDeleteConfirm()!)">Delete</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Edit Role Modal -->
+@if (showEditRoleModal()) {
+  <div class="modal-overlay" (click)="closeEditRoleModal()">
+    <div class="modal-content profile-card" (click)="$event.stopPropagation()">
+      <div class="modal-header-simple">
+        <h2>Edit Profile</h2>
+        <button class="btn-close-simple" (click)="closeEditRoleModal()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="profile-header">
+        <div class="profile-avatar">
+          {{ showEditRoleModal()!.firstName.charAt(0) }}{{ showEditRoleModal()!.lastName.charAt(0) }}
+        </div>
+        <div class="profile-info">
+          <h3>{{ showEditRoleModal()!.firstName }} {{ showEditRoleModal()!.lastName }}</h3>
+          <span class="email">{{ showEditRoleModal()!.email }}</span>
+          <span class="role-badge" [class]="getRoleClass(showEditRoleModal()!.userAuth?.role || '')">
+            {{ getRoleLabel(showEditRoleModal()!.userAuth?.role || '') }}
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Assign Role</label>
+          <select 
+            class="form-control"
+            [value]="selectedRole()"
+            (change)="selectedRole.set($any($event.target).value)">
+            @for (roleType of roleTypes; track roleType.value) {
+              <option [value]="roleType.value">{{ roleType.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer actions-grid">
+        <button class="btn-action secondary" (click)="sendMessage(showEditRoleModal())">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          Send Message
+        </button>
+        <button class="btn-action primary" (click)="updateRole()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Update Role
+        </button>
+      </div>
+    </div>
+  </div>
+}
