@@ -73,107 +73,56 @@
       </article>
     </div>
 
-    <!-- Create Message Form - Only for ADMIN/ROOT -->
+    <!-- Create Message Form - Simplified - Only for ADMIN/ROOT -->
     <div class="messages__form" *ngIf="canCreateMessages() && createFormVisible()">
       <h3>Create Message</h3>
       <form [formGroup]="createMessageForm" (ngSubmit)="submit()">
-        <div class="form-field">
-          <label for="sender">Sender UUID</label>
-          <input 
-            id="sender" 
-            formControlName="sender" 
-            class="form-control"
-            placeholder="Enter sender UUID"
-          />
-          <div class="field-error" *ngIf="createMessageForm.get('sender')?.invalid && createMessageForm.get('sender')?.touched">
-            Sender is required
-          </div>
+        <div class="sender-info" *ngIf="currentUser()">
+          <p><strong>From:</strong> {{ currentUser()?.firstName }} {{ currentUser()?.lastName }} (PIN: {{ currentUser()?.userAuth?.pinCode }})</p>
         </div>
         
         <div class="form-field">
-          <label for="recipient">Recipient UUID</label>
+          <label for="recipient">Recipient PIN Code</label>
           <input 
             id="recipient" 
             formControlName="recipient" 
             class="form-control"
-            placeholder="Enter recipient UUID"
+            type="number"
+            placeholder="Enter recipient PIN code"
+            min="100000"
+            max="999999"
           />
           <div class="field-error" *ngIf="createMessageForm.get('recipient')?.invalid && createMessageForm.get('recipient')?.touched">
-            Recipient is required
+            Please enter a valid 6-digit PIN code
           </div>
         </div>
         
         <div class="form-field">
-          <label for="key">Message Key UUID</label>
+          <label for="subject">Subject</label>
           <input 
-            id="key" 
-            formControlName="key" 
+            id="subject" 
+            formControlName="subject" 
             class="form-control"
-            placeholder="Enter message key UUID"
+            placeholder="Enter message subject"
           />
-          <div class="field-error" *ngIf="createMessageForm.get('key')?.invalid && createMessageForm.get('key')?.touched">
-            Message key is required
+          <div class="field-error" *ngIf="createMessageForm.get('subject')?.invalid && createMessageForm.get('subject')?.touched">
+            Subject is required
           </div>
         </div>
-
-        <section formArrayName="templates" class="templates-section">
-          <h4>Message Templates</h4>
-          <article 
-            *ngFor="let template of templates.controls; let i = index; trackBy: trackByIndex"
-            class="template" 
-            [formGroupName]="i"
-          >
-            <div class="form-field">
-              <label>Language UUID</label>
-              <input 
-                formControlName="language" 
-                class="form-control"
-                placeholder="Enter language UUID"
-              />
-            </div>
-            
-            <div class="form-field">
-              <label>Subject</label>
-              <input 
-                formControlName="subject" 
-                class="form-control"
-                placeholder="Enter message subject"
-              />
-            </div>
-            
-            <div class="form-field">
-              <label>Content</label>
-              <textarea 
-                formControlName="content" 
-                class="form-control"
-                rows="4"
-                placeholder="Enter message content"
-              ></textarea>
-            </div>
-            
-            <div class="form-field">
-              <label>Actions (JSON)</label>
-              <input 
-                formControlName="actions" 
-                class="form-control"
-                placeholder='[{"param":"value"}]' 
-              />
-            </div>
-            
-            <button 
-              type="button" 
-              class="btn btn--danger btn--small"
-              (click)="removeTemplate(i)" 
-              [disabled]="templates.length === 1"
-            >
-              Remove template
-            </button>
-          </article>
-          
-          <button type="button" class="btn btn--secondary" (click)="addTemplate()">
-            Add template
-          </button>
-        </section>
+        
+        <div class="form-field">
+          <label for="content">Content</label>
+          <textarea 
+            id="content"
+            formControlName="content" 
+            class="form-control"
+            rows="6"
+            placeholder="Enter message content"
+          ></textarea>
+          <div class="field-error" *ngIf="createMessageForm.get('content')?.invalid && createMessageForm.get('content')?.touched">
+            Content is required
+          </div>
+        </div>
 
         <footer class="form-footer">
           <button 
@@ -182,7 +131,7 @@
             [disabled]="createMessageForm.invalid || isCreatingMessage()"
           >
             <span *ngIf="isCreatingMessage()">Creating...</span>
-            <span *ngIf="!isCreatingMessage()">Create message</span>
+            <span *ngIf="!isCreatingMessage()">Send Message</span>
           </button>
           
           <button 

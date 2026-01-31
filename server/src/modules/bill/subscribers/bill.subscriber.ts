@@ -150,8 +150,8 @@ export class BillSubscriber implements EntitySubscriberInterface<BillEntity> {
 
     const createdMessage = this._getCreateMessage(
       key.uuid,
-      sender.uuid,
-      recipient.uuid,
+      sender.userAuth.pinCode,
+      recipient.userAuth.pinCode,
       templates,
     );
 
@@ -194,11 +194,11 @@ export class BillSubscriber implements EntitySubscriberInterface<BillEntity> {
 
   private _getCreateMessage(
     key: string,
-    sender: string,
-    recipient: string,
+    senderPinCode: number,
+    recipientPinCode: number,
     templates: CreateMessageTemplateDto[],
   ): CreateMessageDto {
-    return { key, sender, recipient, templates };
+    return { key, senderPinCode, recipientPinCode, templates };
   }
 
   /**
