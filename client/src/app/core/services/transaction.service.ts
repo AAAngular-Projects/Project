@@ -3,13 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { TransactionsPage, TransactionType } from '../models/transaction.model';
 
+import { environment } from '../../../environments/environment';
+
 @Injectable({
   providedIn: 'root'
 })
 export class TransactionService {
   private readonly http = inject(HttpClient);
-  // TODO: Move to environment configuration
-  private readonly API_URL = 'http://localhost:4000/bank';
+  private readonly API_URL = environment.apiUrl;
 
   getTransactions(params: {
     page: number;

@@ -10,6 +10,9 @@ export class BillEntity extends AbstractEntity<BillDto> {
   @Column({ unique: true, length: 26 })
   accountBillNumber: string;
 
+  @Column('decimal', { precision: 13, scale: 2, default: 0 })
+  availableFunds: number;
+
   /**
    * This is a @Virtual column.
    * Used only to map entity correctly using the .getManyAndCount() method.

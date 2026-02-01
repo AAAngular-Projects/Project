@@ -14,6 +14,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const storage = inject(StorageService);
   const token = storage.getToken();
 
+  console.log('🔐 Auth Interceptor:', {
+    url: req.url,
+    hasToken: !!token,
+    tokenPreview: token ? `${token.substring(0, 20)}...` : 'none'
+  });
+
   // Clone request and add authorization header if token exists
   if (token) {
     req = req.clone({
@@ -21,6 +27,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         Authorization: `Bearer ${token}`
       }
     });
+  } else {
+    console.warn('⚠️ No token found for request to:', req.url);
   }
 
   return next(req);
