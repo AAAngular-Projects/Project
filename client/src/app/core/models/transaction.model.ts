@@ -30,6 +30,40 @@ export interface NotificationsPage {
   meta: NotificationPageMeta;
 }
 
+// Transaction Feature Models
+
+export enum TransactionType {
+  INCOMING = 'INCOMING',
+  OUTGOING = 'OUTGOING',
+}
+
+export interface Transaction extends EntityModel {
+  id: number;
+  amountMoney: number;
+  transferTitle: string;
+  authorizationKey?: string;
+  authorizationStatus: boolean; // true = confirmed, false = pending
+  senderBill: NotificationBill;
+  recipientBill: NotificationBill;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TransactionPageMeta {
+  page: number;
+  take: number;
+  itemCount: number;
+  pageCount: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface TransactionsPage {
+  data: Transaction[];
+  meta: TransactionPageMeta;
+}
+
+
 export interface NotificationQuery {
   page?: number;
   take?: number;

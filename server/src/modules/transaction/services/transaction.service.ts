@@ -58,7 +58,7 @@ export class TransactionService {
       'transactions',
     );
 
-    const [transactions, transactionsCount] = await queryBuilder
+    queryBuilder
       .addSelect([
         'recipientUser.uuid',
         'recipientUser.firstName',
@@ -74,12 +74,35 @@ export class TransactionService {
       .leftJoin('recipientBill.user', 'recipientUser')
       .leftJoinAndSelect('recipientBill.currency', 'recipientBillCurrency')
       .leftJoin('senderBill.user', 'senderUser')
-      .leftJoinAndSelect('senderBill.currency', 'senderBillCurrency')
-      .where(':user IN ("senderUser"."id", "recipientUser"."id")')
-      .andWhere('transactions.authorizationStatus = true')
+      .leftJoinAndSelect('senderBill.currency', 'senderBillCurrency');
+
+    if (pageOptionsDto.type === 'INCOMING') {
+      queryBuilder.where('"recipientUser"."id" = :user', { user: user.id });
+    } else if (pageOptionsDto.type === 'OUTGOING') {
+      queryBuilder.where('"senderUser"."id" = :user', { user: user.id });
+    } else {
+      queryBuilder.where(':user IN ("senderUser"."id", "recipientUser"."id")', {
+        user: user.id,
+      });
+    }
+
+    queryBuilder.andWhere('transactions.authorizationStatus = true');
+
+    if (pageOptionsDto.dateFrom) {
+      queryBuilder.andWhere('transactions.createdAt >= :dateFrom', {
+        dateFrom: pageOptionsDto.dateFrom,
+      });
+    }
+
+    if (pageOptionsDto.dateTo) {
+      queryBuilder.andWhere('transactions.createdAt <= :dateTo', {
+        dateTo: pageOptionsDto.dateTo,
+      });
+    }
+
+    const [transactions, transactionsCount] = await queryBuilder
       .orderBy('transactions.updatedAt', pageOptionsDto.order)
       .addOrderBy('transactions.id', pageOptionsDto.order)
-      .setParameter('user', user.id)
       .skip(pageOptionsDto.skip)
       .take(pageOptionsDto.take)
       .getManyAndCount();

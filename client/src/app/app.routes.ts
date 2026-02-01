@@ -40,6 +40,11 @@ export const routes: Routes = [
     path: 'oauth/no-account',
     loadComponent: () => import('./features/auth/oauth-no-account/oauth-no-account.component').then(m => m.OauthNoAccountComponent),
   },
+    {
+    path: 'transactions',
+    loadComponent: () => import('./features/transactions/transactions.component').then(m => m.TransactionsComponent),
+    canActivate: [authGuard]
+  },
   {
     path: 'messages',
     loadComponent: () => import('./features/messages/messages.component').then(m => m.MessagesComponent),

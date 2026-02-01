@@ -9,7 +9,7 @@ import {
   Bill,
   BillsResponse,
   BalanceHistoryItem, 
-  Transaction, 
+  DashboardTransaction, 
   TransactionsResponse 
 } from '../models';
 

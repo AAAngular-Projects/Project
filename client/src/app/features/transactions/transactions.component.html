@@ -1,0 +1,161 @@
+<div class="transactions-container">
+  <div class="header">
+    <h1>Transactions</h1>
+    <div class="header-actions">
+      <button class="btn-sort" (click)="toggleSort()" title="Toggle sort order">
+        <span>Sort: {{ order() === 'DESC' ? '↓ Newest First' : '↑ Oldest First' }}</span>
+      </button>
+      @if (hasActiveFilters()) {
+        <button class="btn-reset" (click)="resetFilters()">
+          Clear Filters
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label>Date From</label>
+      <input type="date" [formControl]="dateFromControl" />
+    </div>
+    <div class="filter-group">
+      <label>Date To</label>
+      <input type="date" [formControl]="dateToControl" />
+    </div>
+    <div class="filter-group">
+      <label>Type</label>
+      <select [formControl]="typeControl">
+        <option [ngValue]="null">All Transactions</option>
+        <option [ngValue]="TransactionType.INCOMING">Incoming</option>
+        <option [ngValue]="TransactionType.OUTGOING">Outgoing</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Per Page</label>
+      <select [value]="pageSize()" (change)="setPageSize(+$any($event.target).value)">
+        @for (size of pageSizes; track size) {
+          <option [value]="size">{{ size }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (error(); as err) {
+    <div class="error-message">
+      <h3>Unable to load transactions</h3>
+      <p>{{ err.message || 'An error occurred while fetching transactions' }}</p>
+      @if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        <p>Please <a href="/login">login</a> to view your transactions.</p>
+      }
+    </div>
+  }
+
+  @if (transactions(); as pageData) {
+    <div class="table-wrapper" [class.loading-data]="isLoading()">
+      @if (isLoading()) {
+        <div class="loading-overlay">
+          <div class="spinner"></div>
+        </div>
+      }
+      <div class="table-responsive" #tableContainer>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Title</th>
+            <th>Sender</th>
+            <th>Recipient</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of pageData.data; track t.uuid) {
+            <tr>
+              <td>
+                <div class="date">{{ t.updatedAt | date:'mediumDate' }}</div>
+                <div class="time">{{ t.updatedAt | date:'shortTime' }}</div>
+              </td>
+              <td>{{ t.transferTitle }}</td>
+              <td>
+                <div class="user">{{ t.senderBill.user?.firstName }} {{ t.senderBill.user?.lastName }}</div>
+                <div class="account">{{ t.senderBill.accountBillNumber | maskAccountNumber }}</div>
+              </td>
+              <td>
+                <div class="user">{{ t.recipientBill.user?.firstName }} {{ t.recipientBill.user?.lastName }}</div>
+                <div class="account">{{ t.recipientBill.accountBillNumber | maskAccountNumber }}</div>
+              </td>
+              <td class="amount">
+                {{ t.amountMoney | currency:(t.senderBill.currency?.name || 'USD') }}
+              </td>
+              <td>
+                <span class="status" [class.confirmed]="t.authorizationStatus" [class.pending]="!t.authorizationStatus">
+                  {{ t.authorizationStatus ? 'Confirmed' : 'Pending' }}
+                </span>
+              </td>
+              <td>
+                @if (t.authorizationStatus) {
+                  <button class="btn-pdf" (click)="onDownload(t.uuid)">PDF</button>
+                }
+              </td>
+            </tr>
+          }
+          @if (pageData.data.length === 0) {
+            <tr>
+              <td colspan="7" class="empty">No transactions found</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <div class="pagination-info">
+        @if (pageData.meta.itemCount > 0) {
+          <span>
+            Showing {{ ((page() - 1) * pageSize()) + 1 }} 
+            to {{ Math.min(page() * pageSize(), pageData.meta.itemCount) }} 
+            of {{ pageData.meta.itemCount }} transactions
+          </span>
+        }
+      </div>
+      <div class="pagination-controls">
+        <button 
+          class="btn-page"
+          [disabled]="page() <= 1" 
+          (click)="setPage(1)"
+          title="First page">
+          ⟪
+        </button>
+        <button 
+          class="btn-page"
+          [disabled]="page() <= 1" 
+          (click)="setPage(page() - 1)"
+          title="Previous page">
+          ‹
+        </button>
+        <span class="page-indicator">
+          Page {{ page() }} of {{ pageData.meta.pageCount }}
+        </span>
+        <button 
+          class="btn-page"
+          [disabled]="page() >= pageData.meta.pageCount" 
+          (click)="setPage(page() + 1)"
+          title="Next page">
+          ›
+        </button>
+        <button 
+          class="btn-page"
+          [disabled]="page() >= pageData.meta.pageCount" 
+          (click)="setPage(pageData.meta.pageCount)"
+          title="Last page">
+          ⟫
+        </button>
+      </div>
+    </div>
+    </div>
+  } @else if (!error()) {
+    <div class="loading">Loading transactions...</div>
+  }
+</div>
