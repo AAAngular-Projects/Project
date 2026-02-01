@@ -142,7 +142,7 @@ export class AuthService {
   }
 
   register(payload: RegisterRequest): Observable<User> {
-    return this.http.post<User>(`${this.API_URL}/Auth/register`, payload);
+    return this.http.post<User>(`${this.API_URL}/auth/register`, payload);
   }
 
   logout(): Observable<void> {
@@ -164,12 +164,12 @@ export class AuthService {
   }
 
   forgotPassword(request: ForgotPasswordRequest): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/Auth/password/forget`, request);
+    return this.http.post<void>(`${this.API_URL}/auth/password/forget`, request);
   }
 
   resetPassword(token: string, password: string): Observable<void> {
     return this.http.patch<void>(
-      `${this.API_URL}/Auth/password/reset`,
+      `${this.API_URL}/auth/password/reset`,
       { password },
       {
         headers: {
