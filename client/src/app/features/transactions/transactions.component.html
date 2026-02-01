@@ -1,6 +1,16 @@
 <div class="transactions-container">
   <div class="header">
     <h1>Transactions</h1>
+    <div class="header-actions">
+      <button class="btn-sort" (click)="toggleSort()" title="Toggle sort order">
+        <span>Sort: {{ order() === 'DESC' ? '↓ Newest First' : '↑ Oldest First' }}</span>
+      </button>
+      @if (hasActiveFilters()) {
+        <button class="btn-reset" (click)="resetFilters()">
+          Clear Filters
+        </button>
+      }
+    </div>
   </div>
 
   <div class="filters">
@@ -20,18 +30,32 @@
         <option [ngValue]="TransactionType.OUTGOING">Outgoing</option>
       </select>
     </div>
+    <div class="filter-group">
+      <label>Per Page</label>
+      <select [value]="pageSize()" (change)="setPageSize(+$any($event.target).value)">
+        @for (size of pageSizes; track size) {
+          <option [value]="size">{{ size }}</option>
+        }
+      </select>
+    </div>
   </div>
 
-  @if (transactions.isLoading()) {
+  @if (error(); as err) {
+    <div class="error-message">
+      <h3>Unable to load transactions</h3>
+      <p>{{ err.message || 'An error occurred while fetching transactions' }}</p>
+      @if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        <p>Please <a href="/login">login</a> to view your transactions.</p>
+      }
+    </div>
+  }
+
+  @if (isLoading() && !transactions()) {
     <div class="loading">Loading transactions...</div>
   }
 
-  @if (transactions.error()) {
-    <div class="error">Error loading transactions.</div>
-  }
-
-  @if (transactions.value(); as pageData) {
-    <div class="table-responsive">
+  @if (transactions(); as pageData) {
+    <div class="table-responsive" #tableContainer>
       <table>
         <thead>
           <tr>
@@ -48,8 +72,8 @@
           @for (t of pageData.data; track t.uuid) {
             <tr>
               <td>
-                <div class="date">{{ t.createdAt | date:'mediumDate' }}</div>
-                <div class="time">{{ t.createdAt | date:'shortTime' }}</div>
+                <div class="date">{{ t.updatedAt | date:'mediumDate' }}</div>
+                <div class="time">{{ t.updatedAt | date:'shortTime' }}</div>
               </td>
               <td>{{ t.transferTitle }}</td>
               <td>
@@ -85,17 +109,48 @@
     </div>
 
     <div class="pagination">
-      <button 
-        [disabled]="!pageData.meta.hasPreviousPage" 
-        (click)="setPage(page() - 1)">
-        Previous
-      </button>
-      <span>Page {{ page() }} of {{ pageData.meta.pageCount }}</span>
-      <button 
-        [disabled]="!pageData.meta.hasNextPage" 
-        (click)="setPage(page() + 1)">
-        Next
-      </button>
+      <div class="pagination-info">
+        @if (pageData.meta.itemCount > 0) {
+          <span>
+            Showing {{ ((page() - 1) * pageSize()) + 1 }} 
+            to {{ Math.min(page() * pageSize(), pageData.meta.itemCount) }} 
+            of {{ pageData.meta.itemCount }} transactions
+          </span>
+        }
+      </div>
+      <div class="pagination-controls">
+        <button 
+          class="btn-page"
+          [disabled]="page() <= 1" 
+          (click)="setPage(1)"
+          title="First page">
+          ⟪
+        </button>
+        <button 
+          class="btn-page"
+          [disabled]="page() <= 1" 
+          (click)="setPage(page() - 1)"
+          title="Previous page">
+          ‹
+        </button>
+        <span class="page-indicator">
+          Page {{ page() }} of {{ pageData.meta.pageCount }}
+        </span>
+        <button 
+          class="btn-page"
+          [disabled]="page() >= pageData.meta.pageCount" 
+          (click)="setPage(page() + 1)"
+          title="Next page">
+          ›
+        </button>
+        <button 
+          class="btn-page"
+          [disabled]="page() >= pageData.meta.pageCount" 
+          (click)="setPage(pageData.meta.pageCount)"
+          title="Last page">
+          ⟫
+        </button>
+      </div>
     </div>
   }
 </div>

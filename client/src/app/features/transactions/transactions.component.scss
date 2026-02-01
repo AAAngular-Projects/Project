@@ -5,10 +5,47 @@
 
   .header {
     margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+
     h1 {
       font-size: 1.5rem;
       color: #333;
       margin: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+
+      .btn-sort,
+      .btn-reset {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+
+        &:hover {
+          background: #f8f9fa;
+          border-color: #007bff;
+        }
+      }
+
+      .btn-reset {
+        background: #dc3545;
+        color: white;
+        border-color: #dc3545;
+
+        &:hover {
+          background: #c82333;
+        }
+      }
     }
   }
 
@@ -130,38 +167,59 @@
 
   .pagination {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 1rem;
     margin-top: 2rem;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    flex-wrap: wrap;
+    gap: 1rem;
 
-    button {
-      padding: 0.5rem 1rem;
-      border: 1px solid #ddd;
-      background: white;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: 500;
-      color: #555;
-
-      &:hover:not(:disabled) {
-        background: #f8f9fa;
-        color: #333;
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
+    .pagination-info {
+      font-size: 0.875rem;
+      color: #666;
     }
 
-    span {
-      font-size: 0.9rem;
-      color: #666;
+    .pagination-controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+
+      .btn-page {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 1rem;
+        min-width: 36px;
+        pointer-events: auto;
+
+        &:hover:not(:disabled) {
+          background: #007bff;
+          color: white;
+          border-color: #007bff;
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+      }
+
+      .page-indicator {
+        padding: 0 0.5rem;
+        font-weight: 500;
+        color: #333;
+      }
     }
   }
 
-  .loading, .error {
+  .loading, .error, .error-message {
     text-align: center;
     padding: 2rem;
     font-size: 1rem;
@@ -169,4 +227,33 @@
   }
 
   .error { color: #dc3545; }
+  
+  .error-message {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin: 2rem 0;
+    padding: 2rem;
+    border-left: 4px solid #dc3545;
+
+    h3 {
+      color: #dc3545;
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      margin: 0.5rem 0;
+      color: #666;
+    }
+
+    a {
+      color: #007bff;
+      text-decoration: underline;
+      
+      &:hover {
+        color: #0056b3;
+      }
+    }
+  }
 }

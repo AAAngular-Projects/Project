@@ -1,12 +1,11 @@
-import { Component, inject, signal, computed } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { Component, inject, signal, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { TransactionService } from '@core/services/transaction.service';
-import { TransactionType } from '@core/models/transaction.model';
+import { TransactionType, TransactionsPage } from '@core/models/transaction.model';
 import { MaskAccountNumberPipe } from '@shared/pipes/mask-account-number.pipe';
-import { of, concat } from 'rxjs';
-import { switchMap, map, catchError } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-transactions',
@@ -19,6 +18,9 @@ export class TransactionsComponent {
   private readonly transactionService = inject(TransactionService);
 
   readonly TransactionType = TransactionType;
+  readonly Math = Math;
+
+  @ViewChild('tableContainer') tableContainer?: ElementRef<HTMLDivElement>;
 
   // Filter signals
   readonly page = signal(1);
@@ -33,51 +35,51 @@ export class TransactionsComponent {
   readonly dateToControl = new FormControl<string | null>(null);
   readonly typeControl = new FormControl<TransactionType | null>(null);
 
+  readonly pageSizes = [10, 25, 50] as const;
+
   constructor() {
-    this.dateFromControl.valueChanges.subscribe(val => {
+    // Debounced date filters (300ms delay)
+    this.dateFromControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(val => {
       this.dateFrom.set(val || undefined);
       this.page.set(1);
     });
-    this.dateToControl.valueChanges.subscribe(val => {
-        this.dateTo.set(val || undefined);
-        this.page.set(1);
+
+    this.dateToControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(val => {
+      this.dateTo.set(val || undefined);
+      this.page.set(1);
     });
+
+    // Immediate type filter (no debounce needed for dropdown)
     this.typeControl.valueChanges.subscribe(val => {
-        this.type.set(val || undefined);
-        this.page.set(1);
+      this.type.set(val || undefined);
+      this.page.set(1);
     });
   }
 
-  // Reactive state derivation using declarative pattern
-  private readonly requestParams = computed(() => ({
-    page: this.page(),
-    take: this.pageSize(),
-    order: this.order(),
-    dateFrom: this.dateFrom(),
-    dateTo: this.dateTo(),
-    type: this.type(),
-  }));
+  // Angular 21 rxResource: Reactive data fetching with automatic cancellation
+  // Automatically refetches when any signal in the params function changes
+  readonly transactionsResource = rxResource({
+    params: () => ({
+      page: this.page(),
+      take: this.pageSize(),
+      order: this.order(),
+      dateFrom: this.dateFrom(),
+      dateTo: this.dateTo(),
+      type: this.type(),
+    }),
+    stream: ({ params }) => this.transactionService.getTransactions(params),
+  });
 
-  private readonly transactionsState = toSignal(
-    toObservable(this.requestParams).pipe(
-      switchMap(params => 
-        concat(
-          of({ status: 'loading' as const, data: undefined, error: undefined }),
-          this.transactionService.getTransactions(params).pipe(
-            map(data => ({ status: 'success' as const, data, error: undefined })),
-            catchError(error => of({ status: 'error' as const, data: undefined, error }))
-          )
-        )
-      )
-    ),
-    { initialValue: { status: 'loading' as const, data: undefined, error: undefined } }
-  );
-
-  readonly transactions = {
-    value: computed(() => this.transactionsState().data),
-    isLoading: computed(() => this.transactionsState().status === 'loading'),
-    error: computed(() => this.transactionsState().status === 'error' ? this.transactionsState().error : null),
-  };
+  // Convenience accessors
+  readonly transactions = computed(() => this.transactionsResource.value());
+  readonly isLoading = computed(() => this.transactionsResource.isLoading());
+  readonly error = computed(() => this.transactionsResource.error());
 
   onDownload(uuid: string) {
     this.transactionService.downloadConfirmation(uuid).subscribe({
@@ -94,6 +96,32 @@ export class TransactionsComponent {
   }
 
   setPage(p: number) {
-      if (p >= 1) this.page.set(p);
+    const meta = this.transactions()?.meta;
+    if (p >= 1 && (!meta || p <= meta.pageCount)) {
+      this.page.set(p);
+    }
   }
+
+  setPageSize(size: number) {
+    this.pageSize.set(size);
+    this.page.set(1);
+  }
+
+  toggleSort() {
+    this.order.set(this.order() === 'ASC' ? 'DESC' : 'ASC');
+  }
+
+  resetFilters() {
+    this.dateFromControl.setValue(null, { emitEvent: false });
+    this.dateToControl.setValue(null, { emitEvent: false });
+    this.typeControl.setValue(null, { emitEvent: false });
+    this.dateFrom.set(undefined);
+    this.dateTo.set(undefined);
+    this.type.set(undefined);
+    this.page.set(1);
+  }
+
+  readonly hasActiveFilters = computed(() => {
+    return !!(this.dateFrom() || this.dateTo() || this.type());
+  });
 }
