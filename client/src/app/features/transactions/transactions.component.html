@@ -50,12 +50,14 @@
     </div>
   }
 
-  @if (isLoading() && !transactions()) {
-    <div class="loading">Loading transactions...</div>
-  }
-
   @if (transactions(); as pageData) {
-    <div class="table-responsive" #tableContainer>
+    <div class="table-wrapper" [class.loading-data]="isLoading()">
+      @if (isLoading()) {
+        <div class="loading-overlay">
+          <div class="spinner"></div>
+        </div>
+      }
+      <div class="table-responsive" #tableContainer>
       <table>
         <thead>
           <tr>
@@ -152,5 +154,8 @@
         </button>
       </div>
     </div>
+    </div>
+  } @else if (!error()) {
+    <div class="loading">Loading transactions...</div>
   }
 </div>

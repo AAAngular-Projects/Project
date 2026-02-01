@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, computed, ViewChild, ElementRef, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -12,7 +12,8 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaskAccountNumberPipe],
   templateUrl: './transactions.component.html',
-  styleUrls: ['./transactions.component.scss']
+  styleUrls: ['./transactions.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TransactionsComponent {
   private readonly transactionService = inject(TransactionService);
@@ -21,6 +22,7 @@ export class TransactionsComponent {
   readonly Math = Math;
 
   @ViewChild('tableContainer') tableContainer?: ElementRef<HTMLDivElement>;
+  private previousPage = signal(1);
 
   // Filter signals
   readonly page = signal(1);
@@ -59,6 +61,24 @@ export class TransactionsComponent {
     this.typeControl.valueChanges.subscribe(val => {
       this.type.set(val || undefined);
       this.page.set(1);
+    });
+
+    // Scroll to table top when page changes (for pagination)
+    effect(() => {
+      const currentPage = this.page();
+      const prevPage = this.previousPage();
+      
+      if (currentPage !== prevPage && this.tableContainer) {
+        // Only scroll if page actually changed (pagination click)
+        setTimeout(() => {
+          this.tableContainer?.nativeElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }, 50);
+      }
+      
+      this.previousPage.set(currentPage);
     });
   }
 
