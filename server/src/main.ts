@@ -26,7 +26,7 @@ async function bootstrap(): Promise<void> {
     new ExpressAdapter(),
     { 
       cors: {
-        origin: ['http://localhost:4200', 'http://localhost:4000'],
+        origin: ['http://localhost:4200', 'http://localhost:4000', 'http://localhost:8080'],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

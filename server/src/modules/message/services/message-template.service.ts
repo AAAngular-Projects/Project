@@ -22,15 +22,11 @@ export class MessageTemplateService {
       actions,
       language,
     } of createdMessage.templates) {
-      console.log('Looking up language by code:', language);
       const languageEntity = await this._languageService.getLanguageByCode(language);
       
       if (!languageEntity) {
-        console.error(`Language not found for code: ${language}`);
         throw new Error(`Language not found for code: ${language}`);
       }
-      
-      console.log('Found language:', languageEntity.uuid, languageEntity.name, languageEntity.code);
 
       const messageTemplate = await this._setMessageTemplate(
         subject,

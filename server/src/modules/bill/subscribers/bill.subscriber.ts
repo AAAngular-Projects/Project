@@ -89,10 +89,19 @@ export class BillSubscriber implements EntitySubscriberInterface<BillEntity> {
     const authorEmail = this._configService.get('BANK_AUTHOR_EMAIL');
 
     if (![rootEmail, authorEmail].includes(event.entity.user.email)) {
+      // Reload the user with userAuth relation
+      const userWithAuth = await this._userService.getUser({
+        email: event.entity.user.email,
+      });
+
+      if (!userWithAuth || !userWithAuth.userAuth) {
+        return;
+      }
+
       await this._initRegisterPromotion(event.entity);
 
       await Promise.all([
-        this._initWelcomeMessage(event.entity.user),
+        this._initWelcomeMessage(userWithAuth),
         this._initWelcomeTransfer(event.entity),
       ]);
     }
@@ -112,7 +121,7 @@ export class BillSubscriber implements EntitySubscriberInterface<BillEntity> {
       role: RoleType.ADMIN,
     });
 
-    if (!sender) {
+    if (!sender || !sender.userAuth) {
       return;
     }
 
@@ -146,10 +155,20 @@ export class BillSubscriber implements EntitySubscriberInterface<BillEntity> {
     const sender = await this._userAuthService.findUserAuth({
       role: RoleType.ADMIN,
     });
+
+    if (!sender || !sender.userAuth) {
+      console.error('Admin user not found or userAuth is missing');
+      return;
+    }
+
+    if (!recipient.userAuth) {
+      return;
+    }
+
     const templates = await this._createMessageTemplates(languages);
 
     const createdMessage = this._getCreateMessage(
-      key.uuid,
+      this._messageName,
       sender.userAuth.pinCode,
       recipient.userAuth.pinCode,
       templates,
@@ -175,7 +194,7 @@ export class BillSubscriber implements EntitySubscriberInterface<BillEntity> {
       role: RoleType.ROOT,
     });
 
-    if (!sender) {
+    if (!sender || !sender.userAuth) {
       return;
     }
 
@@ -220,14 +239,14 @@ export class BillSubscriber implements EntitySubscriberInterface<BillEntity> {
     let messageTemplates = [];
     const customerCount = await this._userService.getUsersCount();
 
-    for (const { uuid: language, code } of languages) {
+    for (const { code } of languages) {
       const content = await this._getWelcomeMessageContent(code);
       const compiledContent = this._getCompiledContent(content, {
         developerAge: this._developerAge,
         customerCount,
       });
       const messageTemplate = this._createMessageTemplate(
-        language,
+        code,
         compiledContent,
         this._messageOptions[code].subject,
         this._messageOptions[code].actions,
