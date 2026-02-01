@@ -13,7 +13,7 @@ export class CurrencyService {
   constructor(
     private readonly _currencyRepository: CurrencyRepository,
     private readonly _httpService: HttpService,
-  ) {}
+  ) { }
 
   private readonly _logger = new Logger(CurrencyService.name);
 
@@ -73,6 +73,7 @@ export class CurrencyService {
     await queryBuilder
       .insert()
       .values({ name, currentExchangeRate, base })
+      .orIgnore()
       .execute();
   }
 
