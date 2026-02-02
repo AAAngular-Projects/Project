@@ -115,19 +115,22 @@
       </div>
 
       <form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmitForgotPassword()" class="forgot-password-form">
-        <p class="modal-description">Enter your email address and we will send you a secure reset link.</p>
+        <p class="modal-description">Enter your PIN code and we will send you a secure reset link to your registered email.</p>
 
         <label class="form-field">
-          <span>Email address</span>
+          <span>PIN Code</span>
           <input
-            id="emailAddress"
-            type="email"
-            formControlName="emailAddress"
-            placeholder="your@email.com"
-            [class.invalid]="forgotPasswordForm.get('emailAddress')?.invalid && forgotPasswordForm.get('emailAddress')?.touched"
+            id="pinCode"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            formControlName="pinCode"
+            placeholder="Enter your PIN"
+            (input)="onPinInputForgot($event)"
+            [class.invalid]="forgotPasswordForm.get('pinCode')?.invalid && forgotPasswordForm.get('pinCode')?.touched"
           />
-          @if (forgotPasswordForm.get('emailAddress')?.invalid && forgotPasswordForm.get('emailAddress')?.touched) {
-            <span class="error-text">Please enter a valid email address</span>
+          @if (forgotPasswordForm.get('pinCode')?.invalid && forgotPasswordForm.get('pinCode')?.touched) {
+            <span class="error-text">Please enter a valid 4-6 digit PIN</span>
           }
         </label>
 

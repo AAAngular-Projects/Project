@@ -10,6 +10,8 @@ import { UserModule } from 'modules/user';
 import { AuthModule } from 'modules/auth';
 import { BillModule } from 'modules/bill';
 import { TransactionModule } from 'modules/transaction';
+import { SavingsGoalModule } from 'modules/savings-goal';
+import { BudgetModule } from 'modules/budget';
 import { AppService } from 'modules/app/services';
 import { contextMiddleware } from 'middlewares';
 import {
@@ -31,6 +33,8 @@ import { UserSubscriber } from 'modules/user/subscribers/user.subscriber';
     CurrencyModule,
     BillModule,
     TransactionModule,
+    SavingsGoalModule,
+    BudgetModule,
     LanguageModule,
     MessageModule,
     NotificationModule,

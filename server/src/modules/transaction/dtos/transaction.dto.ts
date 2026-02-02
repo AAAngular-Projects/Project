@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AbstractDto } from 'common/dtos';
+import { TransactionCategory } from 'common/constants';
 import { BillDto } from 'modules/bill/dtos';
 import { TransactionEntity } from 'modules/transaction/entities';
 
@@ -16,6 +17,9 @@ export class TransactionDto extends AbstractDto {
   @ApiProperty()
   readonly authorizationStatus: boolean;
 
+  @ApiProperty({ enum: TransactionCategory, required: false })
+  readonly category?: TransactionCategory;
+
   @ApiProperty()
   readonly updatedAt: Date;
 
@@ -31,6 +35,7 @@ export class TransactionDto extends AbstractDto {
     this.transferTitle = transaction.transferTitle;
     this.authorizationKey = transaction.authorizationKey;
     this.authorizationStatus = transaction.authorizationStatus;
+    this.category = transaction.category;
     this.updatedAt = transaction.updatedAt;
     this.recipientBill = transaction.recipientBill.toDto();
     this.senderBill = transaction.senderBill.toDto();

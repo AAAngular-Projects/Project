@@ -146,10 +146,10 @@ export class AuthService {
   }
 
   private async _createForgottenPasswordToken({
-    emailAddress,
+    pinCode,
     locale,
   }: UserForgottenPasswordDto): Promise<ForgottenPasswordPayloadDto> {
-    const user = await this._userService.getUser({ email: emailAddress });
+    const user = await this._userService.getUser({ pinCode });
 
     if (!user) {
       throw new WrongCredentialsProvidedException();

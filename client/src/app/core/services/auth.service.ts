@@ -12,6 +12,7 @@ import {
   RoleType,
 } from '../models';
 import { StorageService } from './storage.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +21,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly storage = inject(StorageService);
   private readonly router = inject(Router);
-  private readonly API_URL = 'http://localhost:4000/bank';
+  private readonly API_URL = environment.apiUrl;
 
   // Signals for reactive state management
   private currentUserSignal = signal<User | null>(null);
@@ -126,7 +127,6 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<LoginPayload> {
     this.isLoadingSignal.set(true);
-    
     return this.http.post<LoginPayload>(`${this.API_URL}/auth/login`, credentials).pipe(
       tap({
         next: (response) => {

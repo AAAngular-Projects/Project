@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsEnum, IsOptional } from 'class-validator';
 import { Language } from 'common/constants/language.constant';
+import { TransactionCategory } from 'common/constants';
 
 export class CreateTransactionDto {
   @IsNumber()
@@ -28,4 +29,12 @@ export class CreateTransactionDto {
   })
   @IsEnum(Language)
   readonly locale: Language;
+
+  @ApiProperty({
+    enum: TransactionCategory,
+    required: false,
+  })
+  @IsEnum(TransactionCategory)
+  @IsOptional()
+  readonly category?: TransactionCategory;
 }

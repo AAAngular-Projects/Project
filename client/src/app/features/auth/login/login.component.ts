@@ -32,7 +32,7 @@ export class LoginComponent {
     });
 
     this.forgotPasswordForm = this.fb.group({
-      emailAddress: ['', [Validators.required, Validators.email]],
+      pinCode: ['', [Validators.required, Validators.pattern(/^\d{4,6}$/)]],
       locale: ['en', [Validators.required]]
     });
   }
@@ -42,6 +42,13 @@ export class LoginComponent {
     const value = input.value.replace(/\D/g, ''); // Only allow digits
     input.value = value;
     this.loginForm.patchValue({ pinCode: value });
+  }
+
+  onPinInputForgot(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.replace(/\D/g, ''); // Only allow digits
+    input.value = value;
+    this.forgotPasswordForm.patchValue({ pinCode: value });
   }
 
   onForgotPassword(): void {
@@ -62,7 +69,11 @@ export class LoginComponent {
       this.errorMessage.set('');
       this.successMessage.set('');
       
-      this.authService.forgotPassword(this.forgotPasswordForm.value).subscribe({
+      const { pinCode, locale } = this.forgotPasswordForm.value;
+      this.authService.forgotPassword({ 
+        pinCode: parseInt(pinCode),
+        locale
+      }).subscribe({
         next: () => {
           this.successMessage.set('Password reset link has been sent to your email.');
           setTimeout(() => {

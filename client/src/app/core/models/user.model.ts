@@ -52,7 +52,7 @@ export interface LoginRequest {
 }
 
 export interface ForgotPasswordRequest {
-  emailAddress: string;
+  pinCode: number;
   locale: string;
 }
 

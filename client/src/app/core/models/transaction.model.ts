@@ -1,5 +1,18 @@
 import { EntityModel, Currency, User } from './user.model';
 
+export enum TransactionCategory {
+  FOOD = 'FOOD',
+  RENT = 'RENT',
+  SHOPPING = 'SHOPPING',
+  UTILITIES = 'UTILITIES',
+  ENTERTAINMENT = 'ENTERTAINMENT',
+  TRANSPORTATION = 'TRANSPORTATION',
+  HEALTHCARE = 'HEALTHCARE',
+  EDUCATION = 'EDUCATION',
+  SALARY = 'SALARY',
+  OTHER = 'OTHER',
+}
+
 export interface NotificationBill extends EntityModel {
   accountBillNumber: string;
   amountMoney?: string;
@@ -12,6 +25,7 @@ export interface NotificationTransaction extends EntityModel {
   transferTitle: string;
   authorizationKey: string;
   authorizationStatus: boolean;
+  category?: TransactionCategory;
   updatedAt: string;
   createdAt: string;
   recipientBill?: NotificationBill;
@@ -43,6 +57,7 @@ export interface Transaction extends EntityModel {
   transferTitle: string;
   authorizationKey?: string;
   authorizationStatus: boolean; // true = confirmed, false = pending
+  category?: TransactionCategory;
   senderBill: NotificationBill;
   recipientBill: NotificationBill;
   createdAt: string;

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import { environment } from '../../../../environments/environment';
 
 Chart.register(...registerables);
 
@@ -40,7 +41,7 @@ export class ExchangeRateChartComponent implements OnInit, AfterViewInit, OnDest
   );
   
   private chart?: Chart;
-  private readonly API_URL = 'http://localhost:4000/bank';
+  private readonly API_URL = environment.apiUrl;
   private viewInitialized = false;
 
   ngOnInit(): void {

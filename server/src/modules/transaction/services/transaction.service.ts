@@ -297,7 +297,7 @@ export class TransactionService {
 
     this._validatorService.isCorrectAmountMoney(
       user.userAuth.role,
-      senderBill.amountMoney,
+      senderBill.availableFunds,
       createTransactionDto.amountMoney,
     );
 
@@ -381,14 +381,14 @@ export class TransactionService {
     }
 
     const {
-      amountMoney: senderAmountMoney,
+      availableFunds: senderAvailableFunds,
       senderBill: [{ amountMoney: transactionAmountMoney }],
       senderBill: [transaction],
     } = createdTransaction;
 
     this._validatorService.isCorrectAmountMoney(
       user.userAuth.role,
-      senderAmountMoney,
+      senderAvailableFunds,
       transactionAmountMoney,
     );
 
