@@ -115,6 +115,59 @@ export class TransactionService {
     return new TransactionsPageDto(transactions.toDtos(), pageMetaDto);
   }
 
+  public async getTransactionsForNotifications(
+    user: UserEntity,
+    pageOptionsDto: TransactionsPageOptionsDto,
+  ): Promise<TransactionsPageDto | undefined> {
+    const queryBuilder = this._transactionRepository.createQueryBuilder(
+      'transactions',
+    );
+
+    // Optimized query with minimal data for notifications
+    queryBuilder
+      .select([
+        'transactions.id',
+        'transactions.uuid', 
+        'transactions.amountMoney',
+        'transactions.transferTitle',
+        'transactions.createdAt',
+        'transactions.updatedAt',
+        'senderBill.uuid',
+        'senderBill.accountBillNumber',
+        'recipientBill.uuid', 
+        'recipientBill.accountBillNumber',
+        'senderUser.uuid',
+        'senderUser.firstName',
+        'senderUser.lastName',
+        'recipientUser.uuid',
+        'recipientUser.firstName', 
+        'recipientUser.lastName',
+        'senderCurrency.name',
+        'recipientCurrency.name'
+      ])
+      .innerJoin('transactions.senderBill', 'senderBill')
+      .innerJoin('transactions.recipientBill', 'recipientBill')
+      .innerJoin('senderBill.user', 'senderUser')
+      .innerJoin('recipientBill.user', 'recipientUser')
+      .innerJoin('senderBill.currency', 'senderCurrency')
+      .innerJoin('recipientBill.currency', 'recipientCurrency')
+      .where(':user IN (senderUser.id, recipientUser.id)', { user: user.id })
+      .andWhere('transactions.authorizationStatus = :authorized', { authorized: true })
+      .orderBy('transactions.updatedAt', 'DESC')
+      .addOrderBy('transactions.id', 'DESC')
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take);
+
+    const [transactions, transactionsCount] = await queryBuilder.getManyAndCount();
+
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto,
+      itemCount: transactionsCount,
+    });
+
+    return new TransactionsPageDto(transactions.toDtos(), pageMetaDto);
+  }
+
   public async getTransactionsByBill(
     billId: string,
     user: UserEntity,

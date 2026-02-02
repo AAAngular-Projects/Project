@@ -14,12 +14,12 @@ import { UserEntity } from 'modules/user/entities';
 import { AuthGuard, RolesGuard } from 'guards';
 import { AuthUserInterceptor } from 'interceptors';
 import { RoleType } from 'common/constants';
-import { TransactionService } from 'modules/transaction/services';
 import {
   TransactionsPageDto,
   TransactionsPageOptionsDto,
 } from 'modules/transaction/dtos';
 import { UserConfigService } from 'modules/user/services';
+import { NotificationService } from '../services';
 
 @Controller('Notifications')
 @ApiTags('Notifications')
@@ -29,7 +29,7 @@ import { UserConfigService } from 'modules/user/services';
 @Roles(RoleType.USER, RoleType.ADMIN, RoleType.ROOT)
 export class NotificationController {
   constructor(
-    private readonly _transactionService: TransactionService,
+    private readonly _notificationService: NotificationService,
     private readonly _userConfigSerivce: UserConfigService,
   ) {}
 
@@ -47,10 +47,13 @@ export class NotificationController {
     pageOptionsDto: TransactionsPageOptionsDto,
     @AuthUser() user: UserEntity,
   ): Promise<TransactionsPageDto> {
-    const [transactions] = await Promise.all([
-      this._transactionService.getTransactions(user, pageOptionsDto),
-      this._userConfigSerivce.setNotification(user.userConfig, true),
-    ]);
+    // Use optimized notification service with caching
+    const transactions = await this._notificationService.getNotifications(user, pageOptionsDto);
+
+    // Reset notification count asynchronously (don't wait for it)
+    this._userConfigSerivce.setNotification(user.userConfig, true).catch(error => {
+      console.error('Failed to reset notification count:', error);
+    });
 
     return transactions;
   }

@@ -55,7 +55,7 @@
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.0",
     "source-map-support": "^0.5.19",
-    "swagger-ui-express": "^4.1.4",
+    "swagger-ui-express": "^4.6.3",
     "typeorm": "^0.2.25",
     "typeorm-transactional-cls-hooked": "^0.1.12",
     "uuid": "^8.3.0"

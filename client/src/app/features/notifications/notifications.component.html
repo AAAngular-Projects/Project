@@ -19,7 +19,7 @@
   <!-- Error State -->
   <div *ngIf="error && !loading" class="error-container">
     <p class="error-message">{{ error }}</p>
-    <button class="btn-retry" (click)="refresh()">Try Again</button>
+    <button class="btn-retry" (click)="retry()">Try Again</button>
   </div>
 
   <!-- Empty State -->
