@@ -69,11 +69,6 @@
           </div>
           
           <div class="transaction-status-date">
-            <span class="transaction-status" 
-                  [class.authorized]="transaction.authorizationStatus"
-                  [class.pending]="!transaction.authorizationStatus">
-              {{ transaction.authorizationStatus ? 'Authorized' : 'Pending' }}
-            </span>
             <span class="transaction-date">{{ formatDate(transaction.updatedAt) }}</span>
           </div>
         </div>
