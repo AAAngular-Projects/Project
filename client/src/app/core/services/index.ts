@@ -5,3 +5,6 @@ export * from './currency.service';
 export * from './dashboard.service';
 export * from './notification.service';
 export * from './admin.service';
+export * from './transaction.service';
+export * from './accounts.service';
+export * from './user-settings.service';

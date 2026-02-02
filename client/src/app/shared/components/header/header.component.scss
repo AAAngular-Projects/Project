@@ -79,11 +79,11 @@
     color: #4b5563;
     text-decoration: none;
     font-weight: 600;
-    letter-spacing: 0.5px;
-    padding: 0.65rem 1.25rem;
-    border-radius: 10px;
+    letter-spacing: 0.3px;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
     transition: all 0.3s ease;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     overflow: hidden;
 
     &::before {
@@ -134,17 +134,18 @@
 .admin-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.25rem;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white !important;
   text-decoration: none;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+  letter-spacing: 0.3px;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   transition: all 0.3s ease;
+  white-space: nowrap;
 
   svg {
     stroke: currentColor;
@@ -166,24 +167,40 @@
 .user-name {
   color: #374151;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   letter-spacing: 0.3px;
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.6rem;
   background: #f3f4f6;
-  border-radius: 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.settings-link {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  
+  svg {
+    stroke: currentColor;
+    transition: transform 0.3s ease;
+  }
+  
+  &:hover svg {
+    transform: rotate(45deg);
+  }
 }
 
 .logout-btn {
   background: rgba(239, 68, 68, 0.95);
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  padding: 0.65rem 1.5rem;
-  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 
   &:hover {

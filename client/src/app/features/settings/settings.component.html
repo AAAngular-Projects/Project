@@ -1,0 +1,437 @@
+<div class="settings-container">
+  <!-- Header -->
+  <div class="settings-header">
+    <h1>Settings</h1>
+    <p class="subtitle">Manage your account preferences and security settings</p>
+  </div>
+
+  <!-- Save Message Toast -->
+  @if (saveMessage(); as msg) {
+    <div class="toast" [class.success]="msg.type === 'success'" [class.error]="msg.type === 'error'">
+      <span class="toast-icon">
+        @if (msg.type === 'success') { ✓ } @else { ✕ }
+      </span>
+      {{ msg.text }}
+    </div>
+  }
+
+  <div class="settings-content">
+    <!-- Sidebar Navigation -->
+    <nav class="settings-nav">
+      <button 
+        type="button"
+        class="nav-item" 
+        [class.active]="activeTab() === 'profile'"
+        (click)="setActiveTab('profile')">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">Profile</span>
+      </button>
+      <button 
+        type="button"
+        class="nav-item" 
+        [class.active]="activeTab() === 'security'"
+        (click)="setActiveTab('security')">
+        <span class="nav-icon">🔒</span>
+        <span class="nav-label">Security</span>
+      </button>
+      <button 
+        type="button"
+        class="nav-item" 
+        [class.active]="activeTab() === 'preferences'"
+        (click)="setActiveTab('preferences')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Preferences</span>
+      </button>
+      <button 
+        type="button"
+        class="nav-item" 
+        [class.active]="activeTab() === 'theme'"
+        (click)="setActiveTab('theme')">
+        <span class="nav-icon">🎨</span>
+        <span class="nav-label">Theme</span>
+      </button>
+    </nav>
+
+    <!-- Tab Content -->
+    <div class="settings-panel">
+      
+      <!-- Profile Tab -->
+      @if (activeTab() === 'profile') {
+        <div class="panel-content">
+          <h2>Profile Information</h2>
+          <p class="panel-description">Update your personal information and email address</p>
+
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="settings-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input 
+                  type="text" 
+                  id="firstName" 
+                  formControlName="firstName"
+                  class="form-control"
+                  [class.error]="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched">
+                @if (profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched) {
+                  <span class="error-message">{{ getErrorMessage('firstName', profileForm) }}</span>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input 
+                  type="text" 
+                  id="lastName" 
+                  formControlName="lastName"
+                  class="form-control"
+                  [class.error]="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched">
+                @if (profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched) {
+                  <span class="error-message">{{ getErrorMessage('lastName', profileForm) }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <div class="input-with-status">
+                <input 
+                  type="email" 
+                  id="email" 
+                  formControlName="email"
+                  class="form-control"
+                  [class.error]="profileForm.get('email')?.invalid && profileForm.get('email')?.touched">
+                @if (profileForm.get('email')?.pending) {
+                  <span class="status-indicator checking">Checking...</span>
+                }
+                @if (profileForm.get('email')?.valid && profileForm.get('email')?.dirty) {
+                  <span class="status-indicator available">✓ Available</span>
+                }
+              </div>
+              @if (profileForm.get('email')?.invalid && profileForm.get('email')?.touched) {
+                <span class="error-message">{{ getErrorMessage('email', profileForm) }}</span>
+              }
+            </div>
+
+            <div class="form-group readonly-field">
+              <label>Account Created</label>
+              <p class="readonly-value">Member since {{ currentUser()?.uuid ? 'Account Active' : 'N/A' }}</p>
+            </div>
+
+            <div class="form-actions">
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="!profileForm.valid || !profileForm.dirty || isSaving()">
+                @if (isSaving()) {
+                  <span class="spinner"></span> Saving...
+                } @else {
+                  Save Changes
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- Security Tab -->
+      @if (activeTab() === 'security') {
+        <div class="panel-content">
+          <h2>Security Settings</h2>
+          <p class="panel-description">Manage your password and account security</p>
+
+          <form [formGroup]="securityForm" (ngSubmit)="savePassword()" class="settings-form">
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <div class="password-input-wrapper">
+                <input 
+                  [type]="showNewPassword() ? 'text' : 'password'" 
+                  id="newPassword" 
+                  formControlName="newPassword"
+                  class="form-control"
+                  placeholder="Enter new password">
+                <button 
+                  type="button" 
+                  class="toggle-password"
+                  (click)="togglePasswordVisibility('new')">
+                  {{ showNewPassword() ? '🙈' : '👁️' }}
+                </button>
+              </div>
+              
+              <!-- Password Strength Meter -->
+              @if (securityForm.get('newPassword')?.value) {
+                <div class="password-strength">
+                  <div class="strength-bar">
+                    <div 
+                      class="strength-fill"
+                      [style.width.%]="(passwordStrength().score / 6) * 100"
+                      [style.background]="passwordStrength().color">
+                    </div>
+                  </div>
+                  <span class="strength-label" [style.color]="passwordStrength().color">
+                    {{ passwordStrength().label }}
+                  </span>
+                </div>
+                <ul class="password-requirements">
+                  <li [class.met]="securityForm.get('newPassword')?.value?.length >= 6">
+                    At least 6 characters
+                  </li>
+                  <li [class.met]="securityForm.get('newPassword')?.value?.match('[A-Z]')">
+                    One uppercase letter
+                  </li>
+                  <li [class.met]="securityForm.get('newPassword')?.value?.match('[a-z]')">
+                    One lowercase letter
+                  </li>
+                  <li [class.met]="securityForm.get('newPassword')?.value?.match('[0-9]')">
+                    One number
+                  </li>
+                  <li [class.met]="securityForm.get('newPassword')?.value?.match('[^a-zA-Z0-9]')">
+                    One special character
+                  </li>
+                </ul>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword">Confirm New Password</label>
+              <div class="password-input-wrapper">
+                <input 
+                  [type]="showConfirmPassword() ? 'text' : 'password'" 
+                  id="confirmPassword" 
+                  formControlName="confirmPassword"
+                  class="form-control"
+                  placeholder="Confirm new password"
+                  [class.error]="securityForm.errors?.['passwordMismatch'] && securityForm.get('confirmPassword')?.touched">
+                <button 
+                  type="button" 
+                  class="toggle-password"
+                  (click)="togglePasswordVisibility('confirm')">
+                  {{ showConfirmPassword() ? '🙈' : '👁️' }}
+                </button>
+              </div>
+              @if (securityForm.errors?.['passwordMismatch'] && securityForm.get('confirmPassword')?.touched) {
+                <span class="error-message">Passwords do not match</span>
+              }
+            </div>
+
+            <div class="form-actions">
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="!securityForm.valid || !securityForm.get('newPassword')?.value || isSaving()">
+                @if (isSaving()) {
+                  <span class="spinner"></span> Updating...
+                } @else {
+                  Update Password
+                }
+              </button>
+            </div>
+          </form>
+
+          <div class="security-info">
+            <h3>Security Tips</h3>
+            <ul>
+              <li>Use a unique password you don't use elsewhere</li>
+              <li>Never share your password with anyone</li>
+              <li>Enable two-factor authentication for extra security</li>
+            </ul>
+          </div>
+        </div>
+      }
+
+      <!-- Preferences Tab -->
+      @if (activeTab() === 'preferences') {
+        <div class="panel-content">
+          <h2>Account Preferences</h2>
+          <p class="panel-description">Customize your banking experience</p>
+
+          <form [formGroup]="preferencesForm" class="settings-form">
+            <div class="preference-section">
+              <h3>Alerts & Notifications</h3>
+              
+              <div class="form-group">
+                <label for="lowBalanceThreshold">Low Balance Alert Threshold</label>
+                <div class="input-with-unit">
+                  <span class="unit">$</span>
+                  <input 
+                    type="number" 
+                    id="lowBalanceThreshold" 
+                    formControlName="lowBalanceThreshold"
+                    class="form-control"
+                    min="0">
+                </div>
+                <p class="help-text">Get notified when your balance falls below this amount</p>
+              </div>
+
+              <div class="form-group">
+                <label for="monthlySpendingLimit">Monthly Spending Limit</label>
+                <div class="input-with-unit">
+                  <span class="unit">$</span>
+                  <input 
+                    type="number" 
+                    id="monthlySpendingLimit" 
+                    formControlName="monthlySpendingLimit"
+                    class="form-control"
+                    min="0">
+                </div>
+                <p class="help-text">Get warnings when approaching your spending limit</p>
+              </div>
+
+              <div class="form-group toggle-group">
+                <label class="toggle-label">
+                  <input 
+                    type="checkbox" 
+                    formControlName="enableNotifications"
+                    class="toggle-input">
+                  <span class="toggle-switch"></span>
+                  <span class="toggle-text">Enable Push Notifications</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="preference-section">
+              <h3>Display Settings</h3>
+
+              <div class="form-group">
+                <label for="preferredTransactionView">Transaction View</label>
+                <select 
+                  id="preferredTransactionView" 
+                  formControlName="preferredTransactionView"
+                  class="form-control">
+                  <option value="list">List View</option>
+                  <option value="cards">Card View</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="preference-section">
+              <h3>Session & Security</h3>
+
+              <div class="form-group">
+                <label for="autoLogoutMinutes">Auto-Logout Timer</label>
+                <div class="input-with-unit">
+                  <input 
+                    type="number" 
+                    id="autoLogoutMinutes" 
+                    formControlName="autoLogoutMinutes"
+                    class="form-control"
+                    min="5"
+                    max="120">
+                  <span class="unit">minutes</span>
+                </div>
+                <p class="help-text">Automatically log out after this period of inactivity</p>
+              </div>
+
+              <div class="form-group toggle-group">
+                <label class="toggle-label">
+                  <input 
+                    type="checkbox" 
+                    formControlName="enableTwoFactorAuth"
+                    class="toggle-input">
+                  <span class="toggle-switch"></span>
+                  <span class="toggle-text">Enable Two-Factor Authentication</span>
+                </label>
+                <p class="help-text">Add an extra layer of security to your account</p>
+              </div>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- Theme Tab -->
+      @if (activeTab() === 'theme') {
+        <div class="panel-content">
+          <h2>Theme & Appearance</h2>
+          <p class="panel-description">Customize the look and feel of your dashboard</p>
+
+          <form [formGroup]="themeForm" class="settings-form">
+            <div class="preference-section">
+              <h3>Color Scheme</h3>
+              
+              <div class="theme-options">
+                <label class="theme-option" [class.selected]="themeForm.get('colorScheme')?.value === 'light'">
+                  <input type="radio" formControlName="colorScheme" value="light">
+                  <div class="theme-preview light-preview">
+                    <div class="preview-header"></div>
+                    <div class="preview-content">
+                      <div class="preview-line"></div>
+                      <div class="preview-line short"></div>
+                    </div>
+                  </div>
+                  <span class="theme-name">Light</span>
+                </label>
+
+                <label class="theme-option" [class.selected]="themeForm.get('colorScheme')?.value === 'dark'">
+                  <input type="radio" formControlName="colorScheme" value="dark">
+                  <div class="theme-preview dark-preview">
+                    <div class="preview-header"></div>
+                    <div class="preview-content">
+                      <div class="preview-line"></div>
+                      <div class="preview-line short"></div>
+                    </div>
+                  </div>
+                  <span class="theme-name">Dark</span>
+                </label>
+
+                <label class="theme-option" [class.selected]="themeForm.get('colorScheme')?.value === 'auto'">
+                  <input type="radio" formControlName="colorScheme" value="auto">
+                  <div class="theme-preview auto-preview">
+                    <div class="preview-header"></div>
+                    <div class="preview-content">
+                      <div class="preview-line"></div>
+                      <div class="preview-line short"></div>
+                    </div>
+                  </div>
+                  <span class="theme-name">System</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="preference-section">
+              <h3>Layout Options</h3>
+
+              <div class="form-group toggle-group">
+                <label class="toggle-label">
+                  <input 
+                    type="checkbox" 
+                    formControlName="compactMode"
+                    class="toggle-input">
+                  <span class="toggle-switch"></span>
+                  <span class="toggle-text">Compact Mode</span>
+                </label>
+                <p class="help-text">Reduce spacing for more content on screen</p>
+              </div>
+
+              <div class="form-group toggle-group">
+                <label class="toggle-label">
+                  <input 
+                    type="checkbox" 
+                    formControlName="showAccountIcons"
+                    class="toggle-input">
+                  <span class="toggle-switch"></span>
+                  <span class="toggle-text">Show Account Icons</span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label for="dashboardLayout">Dashboard Layout</label>
+                <select 
+                  id="dashboardLayout" 
+                  formControlName="dashboardLayout"
+                  class="form-control">
+                  <option value="default">Default</option>
+                  <option value="minimal">Minimal</option>
+                  <option value="detailed">Detailed</option>
+                </select>
+              </div>
+            </div>
+          </form>
+
+          <div class="reset-section">
+            <button type="button" class="btn btn-secondary" (click)="resetToDefaults()">
+              Reset to Defaults
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
