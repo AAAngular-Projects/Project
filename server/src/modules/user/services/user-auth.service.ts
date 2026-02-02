@@ -20,7 +20,7 @@ export class UserAuthService {
     @Inject(forwardRef(() => UserService))
     private readonly _userService: UserService,
     private readonly _userConfigService: UserConfigService,
-  ) {}
+  ) { }
 
   @Transactional()
   public async updateLastLoggedDate(

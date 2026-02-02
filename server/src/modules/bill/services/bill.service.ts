@@ -11,6 +11,7 @@ import {
   BillDto,
   BillsPageDto,
   BillsPageOptionsDto,
+  SearchBillsByUserOptionsDto,
   TotalAccountBalanceHistoryPayloadDto,
   TotalAccountBalancePayloadDto,
   TotalAmountMoneyPayloadDto,
@@ -30,7 +31,7 @@ export class BillService {
     private readonly _billRepository: BillRepository,
     private readonly _transactionRepository: TransactionRepository,
     private readonly _currencyService: CurrencyService,
-  ) {}
+  ) { }
 
   public async getBills(
     user: UserEntity,
@@ -325,6 +326,7 @@ export class BillService {
       this._currencyService.findCurrency({ uuid: createdUser.currency }),
     ]);
 
+
     if (!currency) {
       throw new CurrencyNotFoundException();
     }
@@ -337,17 +339,18 @@ export class BillService {
       throw new CreateNewBillFailedException();
     }
 
+
+
     const createdBill: BillEntity = {
       ...createdUser,
       accountBillNumber,
       currency,
       amountMoney: '0.00', // this value is not saved to the database. It is only used to display correctly in payload
     };
-
     const bill = this._billRepository.create(createdBill);
 
     try {
-      return this._billRepository.save(bill);
+      return await this._billRepository.save(bill);
     } catch (error) {
       throw new CreateFailedException(error);
     }
@@ -385,6 +388,44 @@ export class BillService {
 
     const pageMetaDto = new PageMetaDto({
       pageOptionsDto,
+      itemCount: billsCount,
+    });
+
+    return new BillsPageDto(bills.toDtos(), pageMetaDto);
+  }
+
+  public async searchBillByUserName(
+    searchOptions: SearchBillsByUserOptionsDto,
+    user?: UserEntity,
+  ): Promise<BillsPageDto | undefined> {
+    const queryBuilder = this._billRepository.createQueryBuilder('bills');
+
+    queryBuilder
+      .select([
+        'bills',
+        'currency',
+        'user.firstName',
+        'user.lastName',
+        'user.avatar',
+      ])
+      .leftJoin('bills.currency', 'currency')
+      .leftJoin('bills.user', 'user')
+      .where(
+        '(LOWER(user.firstName) LIKE LOWER(:name) OR LOWER(user.lastName) LIKE LOWER(:name))',
+        { name: `%${searchOptions.name}%` },
+      );
+
+    if (user) {
+      queryBuilder.andWhere('user.id != :userId', { userId: user.id });
+    }
+
+    const [bills, billsCount] = await queryBuilder
+      .skip(searchOptions.skip)
+      .take(searchOptions.take)
+      .getManyAndCount();
+
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto: searchOptions,
       itemCount: billsCount,
     });
 

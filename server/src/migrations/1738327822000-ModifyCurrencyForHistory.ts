@@ -2,18 +2,23 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class ModifyCurrencyForHistory1738327822000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
+      ALTER TABLE currency
+       DROP CONSTRAINT IF EXISTS "UQ_77f11186dd58a8d87ad5fff0246"
+    `);
+
+    await queryRunner.query(`
+      ALTER TABLE currency 
+      DROP CONSTRAINT IF EXISTS "UQ_currency_name"
+    `);
+
+
     // Add a recordedAt column to track when each exchange rate was recorded
     await queryRunner.query(`
       ALTER TABLE currency 
       ADD COLUMN "recorded_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     `);
 
-    // Remove the unique constraint on name to allow multiple historical records
-    await queryRunner.query(`
-      ALTER TABLE currency 
-      DROP CONSTRAINT IF EXISTS "UQ_currency_name"
-    `);
-    
     await queryRunner.query(`
       ALTER TABLE currency 
       DROP CONSTRAINT IF EXISTS "currency_name_key"

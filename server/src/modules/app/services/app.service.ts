@@ -21,7 +21,7 @@ export class AppService implements OnModuleInit {
   private _userAuthService: UserAuthService;
   private _messageKeyService: MessageKeyService;
 
-  constructor(private readonly _moduleRef: ModuleRef) {}
+  constructor(private readonly _moduleRef: ModuleRef) { }
 
   public async onModuleInit(): Promise<void> {
     this._currencyCron = this._moduleRef.get(CurrencyCron, this._moduleOptions);

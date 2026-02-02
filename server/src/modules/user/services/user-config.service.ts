@@ -11,7 +11,7 @@ export class UserConfigService {
   constructor(
     private readonly _userConfigRepository: UserConfigRepository,
     private readonly _currencyService: CurrencyService,
-  ) {}
+  ) { }
 
   public async createUserConfig(createdUser): Promise<UserConfigEntity> {
     const currency = await this._currencyService.findCurrency({
@@ -26,7 +26,7 @@ export class UserConfigService {
     const config = this._userConfigRepository.create(createdCurrency);
 
     try {
-      return this._userConfigRepository.save(config);
+      return await this._userConfigRepository.save(config);
     } catch (error) {
       throw new CreateFailedException(error);
     }

@@ -148,10 +148,13 @@ export class BillSubscriber implements EntitySubscriberInterface<BillEntity> {
     });
     const templates = await this._createMessageTemplates(languages);
 
+    // Fetch the full recipient with userAuth relation
+    const fullRecipient = await this._userService.getUser({ uuid: recipient.uuid });
+
     const createdMessage = this._getCreateMessage(
-      key.uuid,
+      key.name,
       sender.userAuth.pinCode,
-      recipient.userAuth.pinCode,
+      fullRecipient.userAuth.pinCode,
       templates,
     );
 
@@ -220,14 +223,14 @@ export class BillSubscriber implements EntitySubscriberInterface<BillEntity> {
     let messageTemplates = [];
     const customerCount = await this._userService.getUsersCount();
 
-    for (const { uuid: language, code } of languages) {
+    for (const { code } of languages) {
       const content = await this._getWelcomeMessageContent(code);
       const compiledContent = this._getCompiledContent(content, {
         developerAge: this._developerAge,
         customerCount,
       });
       const messageTemplate = this._createMessageTemplate(
-        language,
+        code,
         compiledContent,
         this._messageOptions[code].subject,
         this._messageOptions[code].actions,

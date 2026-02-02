@@ -29,7 +29,7 @@ export class UserController {
     private readonly _userService: UserService,
     private readonly _userConfigService: UserConfigService,
     private readonly _userAuthService: UserAuthService,
-  ) {}
+  ) { }
 
   @Get('/')
   @UseGuards(AuthGuard, RolesGuard)

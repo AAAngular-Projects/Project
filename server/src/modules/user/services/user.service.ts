@@ -25,7 +25,7 @@ export class UserService {
     private readonly _billService: BillService,
     private readonly _currencyService: CurrencyService,
     private readonly _userAuthForgottenPasswordService: UserAuthForgottenPasswordService,
-  ) {}
+  ) { }
 
   @Transactional()
   public async createUser(
@@ -34,9 +34,7 @@ export class UserService {
     try {
       const user = this._userRepository.create(userRegisterDto);
       await this._userRepository.save(user);
-
       const createdUser = { ...userRegisterDto, user };
-
       const [authResult] = await Promise.all([
         this._userAuthService.createUserAuth(createdUser),
         this._userConfigService.createUserConfig(createdUser),
