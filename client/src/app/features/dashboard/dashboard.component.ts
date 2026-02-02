@@ -317,7 +317,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onConfirmationCancelled(): void {
-    // Go back to form step (though transaction is already created)
     this.dashboardService.loadDashboardData();
     this.closeTransferModal();
   }
