@@ -68,22 +68,23 @@ export class UserAuthForgottenPasswordService {
   ): void {
     this._mailerService
       .sendMail({
-        // to: user.email,
-        to: "selma.sghaier@insat.ucar.tn",
+        to: user.email,
         from: this._configService.get('EMAIL_ADDRESS'),
         subject: this._getSubjectEmail(locale),
         template:
           __dirname + `/../templates/reset-password.template.${locale}.hbs`,
         context: { url },
       })
-      .then(() =>
-        this._logger.log(`The email with token has been sent to ${user.email}`),
-      )
-      .catch((error: any) =>
+      .then((result) => {
+        this._logger.log(`The email with token has been sent to ${user.email}`);
+        this._logger.log(`Email result: ${JSON.stringify(result)}`);
+      })
+      .catch((error: any) => {
         this._logger.error(
-          `The email with token has not been sent to ${user.email}. Reason: ${error}`,
-        ),
-      );
+          `The email with token has not been sent to ${user.email}. Reason: ${error.message || error}`,
+        );
+        this._logger.error(`Full error: ${JSON.stringify(error)}`);
+      });
   }
 
   public sendPinCodeEmail(
@@ -93,27 +94,28 @@ export class UserAuthForgottenPasswordService {
   ): void {
     this._mailerService
       .sendMail({
-        // to: user.email,
-        to: "selma.sghaier@insat.ucar.tn",
+        to: user.email,
         from: this._configService.get('EMAIL_ADDRESS'),
         subject: this._getPinCodeSubjectEmail(locale),
         template:
           __dirname + `/../templates/pin-code.template.${locale}.hbs`,
-        context: { 
+        context: {
           firstName: user.firstName,
           lastName: user.lastName,
           pinCode: pinCode.toString().padStart(6, '0'),
           email: user.email,
         },
       })
-      .then(() =>
-        this._logger.log(`The PIN code email has been sent to ${user.email}`),
-      )
-      .catch((error: any) =>
+      .then((result) => {
+        this._logger.log(`The PIN code email has been sent to ${user.email}`);
+        this._logger.log(`Email result: ${JSON.stringify(result)}`);
+      })
+      .catch((error: any) => {
         this._logger.error(
-          `The PIN code email has not been sent to ${user.email}. Reason: ${error}`,
-        ),
-      );
+          `The PIN code email has not been sent to ${user.email}. Reason: ${error.message || error}`,
+        );
+        this._logger.error(`Full error: ${JSON.stringify(error)}`);
+      });
   }
 
   public async changeTokenActiveStatus(
