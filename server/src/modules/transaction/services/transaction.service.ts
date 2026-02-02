@@ -33,7 +33,6 @@ import { UtilsService, ValidatorService } from 'utils/services';
 @Injectable()
 export class TransactionService {
   private readonly _logger = new Logger(TransactionService.name);
-  private readonly _configService = new ConfigService();
   private readonly _emailSubject = {
     en: 'Payment authorization',
     de: 'Zahlungsermächtigung',
@@ -48,6 +47,7 @@ export class TransactionService {
     private readonly _mailerService: MailerService,
     private readonly _userConfigService: UserConfigService,
     private readonly _languageService: LanguageService,
+    private readonly _configService: ConfigService,
   ) {}
 
   public async getTransactions(
@@ -78,15 +78,18 @@ export class TransactionService {
 
     if (pageOptionsDto.type === 'INCOMING') {
       queryBuilder.where('"recipientUser"."id" = :user', { user: user.id });
+      // Incoming transactions: only show confirmed ones
+      queryBuilder.andWhere('transactions.authorizationStatus = true');
     } else if (pageOptionsDto.type === 'OUTGOING') {
       queryBuilder.where('"senderUser"."id" = :user', { user: user.id });
+      // Outgoing transactions: show all (including pending) so sender can confirm
     } else {
-      queryBuilder.where(':user IN ("senderUser"."id", "recipientUser"."id")', {
-        user: user.id,
-      });
+      // All transactions: show confirmed + pending outgoing (for sender to confirm)
+      queryBuilder.where(
+        '(transactions.authorizationStatus = true AND :user IN ("senderUser"."id", "recipientUser"."id")) OR (transactions.authorizationStatus = false AND "senderUser"."id" = :user)',
+        { user: user.id },
+      );
     }
-
-    queryBuilder.andWhere('transactions.authorizationStatus = true');
 
     if (pageOptionsDto.dateFrom) {
       queryBuilder.andWhere('transactions.createdAt >= :dateFrom', {
@@ -310,6 +313,10 @@ export class TransactionService {
       this._logger.error(
         `An email with a confirmation code has not been sent. Theoretical recipient: ${senderBill.user.email}`,
       );
+      this._logger.error(`Email error details: ${error.message || error}`);
+      if (error.stack) {
+        this._logger.error(`Stack trace: ${error.stack}`);
+      }
     }
   }
 
