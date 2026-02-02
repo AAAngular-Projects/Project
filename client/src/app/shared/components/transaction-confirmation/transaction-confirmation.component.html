@@ -1,0 +1,93 @@
+<div class="confirmation-container">
+  <div class="transaction-summary">
+    <div class="summary-row">
+      <span class="label">Amount:</span>
+      <span class="value amount">{{ transaction().amountMoney | currency:transaction().currencyName:'symbol':'1.2-2' }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Recipient:</span>
+      <span class="value">{{ transaction().recipientName }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Title:</span>
+      <span class="value">{{ transaction().transferTitle }}</span>
+    </div>
+  </div>
+
+  @if (success()) {
+    <div class="success-message">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>Transaction confirmed successfully!</span>
+    </div>
+  } @else {
+    <div class="confirmation-info">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+      <p>An authorization key has been sent to your email. Enter it below to confirm this transaction.</p>
+    </div>
+
+    <form [formGroup]="confirmForm" (ngSubmit)="submitConfirmation()">
+      <div class="form-group">
+        <label for="authKey">Authorization Key</label>
+        <input
+          type="text"
+          id="authKey"
+          formControlName="authorizationKey"
+          placeholder="Enter the key from your email"
+          autocomplete="off"
+          [class.invalid]="confirmForm.get('authorizationKey')?.invalid && confirmForm.get('authorizationKey')?.touched" />
+        @if (confirmForm.get('authorizationKey')?.invalid && confirmForm.get('authorizationKey')?.touched) {
+          <span class="field-error">Authorization key is required</span>
+        }
+      </div>
+
+      @if (error(); as errorMsg) {
+        <div class="error-message">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+          <span>{{ errorMsg }}</span>
+        </div>
+      }
+
+      <div class="actions">
+        @if (showSkipOption()) {
+          <button
+            type="button"
+            class="btn-skip"
+            (click)="onSkip()"
+            [disabled]="loading()">
+            Confirm Later
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="onCancel()"
+            [disabled]="loading()">
+            Cancel
+          </button>
+        }
+        <button
+          type="submit"
+          class="btn-confirm"
+          [disabled]="loading()">
+          @if (loading()) {
+            <span class="btn-spinner"></span>
+            Confirming...
+          } @else {
+            Confirm Transaction
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

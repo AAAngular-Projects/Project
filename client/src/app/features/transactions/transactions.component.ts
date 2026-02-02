@@ -3,20 +3,25 @@ import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { TransactionService } from '@core/services/transaction.service';
-import { TransactionType, TransactionsPage } from '@core/models/transaction.model';
+import { AuthService } from '@core/services/auth.service';
+import { Transaction, TransactionType } from '@core/models/transaction.model';
 import { MaskAccountNumberPipe } from '@shared/pipes/mask-account-number.pipe';
+import { TransactionConfirmationComponent, TransactionSummary } from '@shared/components/transaction-confirmation/transaction-confirmation.component';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-transactions',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaskAccountNumberPipe],
+  imports: [CommonModule, ReactiveFormsModule, MaskAccountNumberPipe, TransactionConfirmationComponent],
   templateUrl: './transactions.component.html',
   styleUrls: ['./transactions.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:keydown.escape)': 'onEscapeKey()'
+  }
 })
 export class TransactionsComponent {
   private readonly transactionService = inject(TransactionService);
+  private readonly authService = inject(AuthService);
 
   readonly TransactionType = TransactionType;
   readonly Math = Math;
@@ -38,6 +43,13 @@ export class TransactionsComponent {
   readonly typeControl = new FormControl<TransactionType | null>(null);
 
   readonly pageSizes = [10, 25, 50] as const;
+
+  // Confirm modal signals
+  readonly showConfirmModal = signal(false);
+  readonly pendingTransaction = signal<TransactionSummary | null>(null);
+
+  // Current user accessor
+  readonly currentUser = this.authService.currentUser;
 
   constructor() {
     // Debounced date filters (300ms delay)
@@ -144,4 +156,42 @@ export class TransactionsComponent {
   readonly hasActiveFilters = computed(() => {
     return !!(this.dateFrom() || this.dateTo() || this.type());
   });
+
+  canConfirmTransaction(t: Transaction): boolean {
+    const user = this.currentUser();
+    return !t.authorizationStatus && t.senderBill?.user?.uuid === user?.uuid;
+  }
+
+  openConfirmModal(t: Transaction): void {
+    this.pendingTransaction.set({
+      uuid: t.uuid,
+      amountMoney: t.amountMoney,
+      currencyName: t.senderBill?.currency?.name || 'USD',
+      recipientName: t.recipientBill?.user
+        ? `${t.recipientBill.user.firstName} ${t.recipientBill.user.lastName}`
+        : 'Unknown',
+      transferTitle: t.transferTitle
+    });
+    this.showConfirmModal.set(true);
+  }
+
+  closeConfirmModal(): void {
+    this.showConfirmModal.set(false);
+    this.pendingTransaction.set(null);
+  }
+
+  onEscapeKey(): void {
+    if (this.showConfirmModal()) {
+      this.closeConfirmModal();
+    }
+  }
+
+  onTransactionConfirmed(): void {
+    this.transactionsResource.reload();
+    this.closeConfirmModal();
+  }
+
+  onConfirmationCancelled(): void {
+    this.closeConfirmModal();
+  }
 }

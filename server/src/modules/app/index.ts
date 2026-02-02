@@ -76,7 +76,7 @@ import { UserSubscriber } from 'modules/user/subscribers/user.subscriber';
           from: '"Bank Application" <payment@bank.pietrzakadrian.com>',
         },
         template: {
-          dir: process.cwd() + 'src/modules/transaction/templates/',
+          dir: process.cwd() + '/src/modules/transaction/templates/',
           adapter: new HandlebarsAdapter(),
           options: { strict: true },
         },

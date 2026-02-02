@@ -101,3 +101,7 @@ export interface SearchBillResult {
 export interface SearchBillsResponse {
   data: SearchBillResult[];
 }
+
+export interface ConfirmTransactionRequest {
+  authorizationKey: string;
+}

@@ -94,9 +94,12 @@
                   {{ t.authorizationStatus ? 'Confirmed' : 'Pending' }}
                 </span>
               </td>
-              <td>
+              <td class="actions">
                 @if (t.authorizationStatus) {
                   <button class="btn-pdf" (click)="onDownload(t.uuid)">PDF</button>
+                }
+                @if (canConfirmTransaction(t)) {
+                  <button class="btn-confirm" (click)="openConfirmModal(t)">Confirm</button>
                 }
               </td>
             </tr>
@@ -157,5 +160,31 @@
     </div>
   } @else if (!error()) {
     <div class="loading">Loading transactions...</div>
+  }
+
+  @if (showConfirmModal()) {
+    <div class="modal-overlay" (click)="closeConfirmModal()">
+      <div
+        class="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-modal-title"
+        (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 id="confirm-modal-title">Confirm Transaction</h2>
+          <button class="btn-close" (click)="closeConfirmModal()" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          @if (pendingTransaction(); as transaction) {
+            <app-transaction-confirmation
+              [transaction]="transaction"
+              [showSkipOption]="false"
+              (confirmed)="onTransactionConfirmed()"
+              (cancelled)="onConfirmationCancelled()" />
+          }
+        </div>
+      </div>
+    </div>
   }
 </div>

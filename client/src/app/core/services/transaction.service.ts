@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { TransactionsPage, TransactionType, CreateTransactionRequest, CreateTransactionResponse } from '../models/transaction.model';
+import { TransactionsPage, TransactionType, CreateTransactionRequest, CreateTransactionResponse, ConfirmTransactionRequest } from '../models/transaction.model';
 
 @Injectable({
   providedIn: 'root'
@@ -37,5 +37,14 @@ export class TransactionService {
 
   createTransaction(request: CreateTransactionRequest): Observable<CreateTransactionResponse> {
     return this.http.post<CreateTransactionResponse>(`${this.API_URL}/Transactions/create`, request);
+  }
+
+  getAuthorizationKey(uuid: string): Observable<{ authorizationKey: string }> {
+    return this.http.get<{ authorizationKey: string }>(`${this.API_URL}/Transactions/${uuid}/authorizationKey`);
+  }
+
+  confirmTransaction(authorizationKey: string): Observable<void> {
+    const request: ConfirmTransactionRequest = { authorizationKey };
+    return this.http.patch<void>(`${this.API_URL}/Transactions/confirm`, request);
   }
 }

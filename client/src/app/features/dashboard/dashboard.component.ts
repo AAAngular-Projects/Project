@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, DestroyRef } from '@angular/core';
+import { Component, inject, signal, effect, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -6,18 +6,22 @@ import { DashboardService, AuthService, AccountsService, TransactionService } fr
 import { Account, SearchBillResult, TransferLocale } from '../../core/models';
 import { Chart, registerables } from 'chart.js';
 import { ExchangeRateChartComponent } from './exchange-rate-chart/exchange-rate-chart.component';
-import { debounceTime, distinctUntilChanged, filter, switchMap, catchError } from 'rxjs/operators';
-import { of, Subject } from 'rxjs';
+import { TransactionConfirmationComponent, TransactionSummary } from '@shared/components/transaction-confirmation/transaction-confirmation.component';
+import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { catchError } from 'rxjs/operators';
+
+type TransferStep = 'form' | 'confirm' | 'success';
 
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe, ExchangeRateChartComponent, ReactiveFormsModule],
+  imports: [CommonModule, CurrencyPipe, DatePipe, ExchangeRateChartComponent, ReactiveFormsModule, TransactionConfirmationComponent],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss']
+  styleUrls: ['./dashboard.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
@@ -44,13 +48,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Transfer modal signals
   showTransferModal = signal(false);
+  transferStep = signal<TransferStep>('form');
   senderAccounts = signal<Account[]>([]);
   recipientSearchResults = signal<SearchBillResult[]>([]);
   searchLoading = signal(false);
   transferLoading = signal(false);
   selectedRecipient = signal<SearchBillResult | null>(null);
   transferError = signal<string | null>(null);
-  transferSuccess = signal(false);
+  pendingTransaction = signal<TransactionSummary | null>(null);
 
   // Transfer form
   transferForm = this.fb.group({
@@ -186,8 +191,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   openTransferModal(): void {
     this.showTransferModal.set(true);
+    this.transferStep.set('form');
     this.transferError.set(null);
-    this.transferSuccess.set(false);
+    this.pendingTransaction.set(null);
     this.selectedRecipient.set(null);
     this.recipientSearchResults.set([]);
     this.recipientSearchControl.setValue('');
@@ -207,11 +213,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   closeTransferModal(): void {
     this.showTransferModal.set(false);
+    this.transferStep.set('form');
     this.transferForm.reset();
     this.selectedRecipient.set(null);
     this.recipientSearchResults.set([]);
     this.transferError.set(null);
-    this.transferSuccess.set(false);
+    this.pendingTransaction.set(null);
   }
 
   onRecipientSearch(searchTerm: string): void {
@@ -262,6 +269,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const formValue = this.transferForm.value;
+    const senderAccount = this.senderAccounts().find(a => a.id === formValue.senderBill);
+
     this.transferLoading.set(true);
     this.transferError.set(null);
 
@@ -269,23 +278,47 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       amountMoney: formValue.amount!,
       transferTitle: formValue.note!,
       senderBill: formValue.senderBill!,
-      recipientBill: recipient.accountBillNumber,
+      recipientBill: recipient.uuid,
       locale: formValue.locale!
     }).subscribe({
-      next: () => {
+      next: (response) => {
         this.transferLoading.set(false);
-        this.transferSuccess.set(true);
-        // Refresh dashboard data
-        this.dashboardService.loadDashboardData();
-        // Close modal after short delay
-        setTimeout(() => {
-          this.closeTransferModal();
-        }, 1500);
+
+        // Store transaction details for confirmation
+        this.pendingTransaction.set({
+          uuid: response.uuid,
+          amountMoney: formValue.amount!,
+          currencyName: senderAccount?.currency || 'USD',
+          recipientName: recipient.user
+            ? `${recipient.user.firstName} ${recipient.user.lastName}`
+            : 'Unknown',
+          transferTitle: formValue.note!
+        });
+
+        // Move to confirmation step
+        this.transferStep.set('confirm');
       },
       error: (error) => {
         this.transferLoading.set(false);
         this.transferError.set(error.error?.message || 'Transfer failed. Please try again.');
       }
     });
+  }
+
+  onTransactionConfirmed(): void {
+    // Component already shows success message, just close modal and refresh data
+    this.dashboardService.loadDashboardData();
+    this.closeTransferModal();
+  }
+
+  onConfirmationSkipped(): void {
+    this.dashboardService.loadDashboardData();
+    this.closeTransferModal();
+  }
+
+  onConfirmationCancelled(): void {
+    // Go back to form step (though transaction is already created)
+    this.dashboardService.loadDashboardData();
+    this.closeTransferModal();
   }
 }
