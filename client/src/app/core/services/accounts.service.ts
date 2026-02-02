@@ -2,12 +2,13 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, delay } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { 
-  Account, 
-  AccountsResponse, 
-  AccountTransaction, 
+import {
+  Account,
+  AccountsResponse,
+  AccountTransaction,
   AccountTransactionsResponse,
-  AccountType 
+  AccountType,
+  SearchBillsResponse
 } from '@core/models';
 
 @Injectable({
@@ -15,10 +16,10 @@ import {
 })
 export class AccountsService {
   private readonly API_URL = 'http://localhost:4000/bank';
-  
+
   selectedAccountId = signal<string | null>(null);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getAccounts(): Observable<AccountsResponse> {
     return this.http.get<any>(`${this.API_URL}/Bills`, {
@@ -57,7 +58,7 @@ export class AccountsService {
   getAccountById(id: string): Observable<Account> {
     // TODO: Replace with actual API call
     // return this.http.get<Account>(`${this.API_URL}/accounts/${id}`);
-    
+
     return this.getAccounts().pipe(
       map(response => {
         const account = response.data.find((acc: Account) => acc.id === id);
@@ -120,5 +121,14 @@ export class AccountsService {
    */
   clearSelection(): void {
     this.selectedAccountId.set(null);
+  }
+
+  /**
+   * Search for bills by user name (firstName or lastName)
+   */
+  searchBills(name: string): Observable<SearchBillsResponse> {
+    return this.http.get<SearchBillsResponse>(`${this.API_URL}/Bills/searchByUser`, {
+      params: { name, page: '1', take: '10' }
+    });
   }
 }

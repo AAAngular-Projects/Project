@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { TransactionsPage, TransactionType } from '../models/transaction.model';
+import { TransactionsPage, TransactionType, CreateTransactionRequest, CreateTransactionResponse } from '../models/transaction.model';
 
 @Injectable({
   providedIn: 'root'
@@ -32,6 +32,10 @@ export class TransactionService {
   }
 
   downloadConfirmation(uuid: string, locale: string = 'en'): Observable<Blob> {
-      return this.http.get(`${this.API_URL}/Transactions/${uuid}/${locale}/confirmationFile`, { responseType: 'blob' });
+    return this.http.get(`${this.API_URL}/Transactions/${uuid}/${locale}/confirmationFile`, { responseType: 'blob' });
+  }
+
+  createTransaction(request: CreateTransactionRequest): Observable<CreateTransactionResponse> {
+    return this.http.post<CreateTransactionResponse>(`${this.API_URL}/Transactions/create`, request);
   }
 }

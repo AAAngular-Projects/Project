@@ -233,3 +233,187 @@
     </div>
   </div>
 </div>
+
+<!-- Transfer Modal -->
+@if (showTransferModal()) {
+  <div class="modal-overlay" (click)="closeTransferModal()">
+    <div class="modal-content transfer-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Make Transfer</h2>
+        <button class="btn-close" (click)="closeTransferModal()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        @if (transferSuccess()) {
+          <div class="success-message">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <p>Transfer created successfully!</p>
+          </div>
+        } @else {
+          <form [formGroup]="transferForm">
+            <!-- Sender Account -->
+            <div class="form-group">
+              <label for="senderBill">From Account</label>
+              <select id="senderBill" formControlName="senderBill" class="form-control">
+                <option value="">Select an account</option>
+                @for (account of senderAccounts(); track account.id) {
+                  <option [value]="account.accountNumber">
+                    **** {{ account.accountNumber.slice(-4) }} - {{ account.currency }} ({{ account.balance | currency:account.currency:'symbol':'1.2-2' }})
+                  </option>
+                }
+              </select>
+              @if (transferForm.get('senderBill')?.invalid && transferForm.get('senderBill')?.touched) {
+                <span class="error-text">Please select a sender account</span>
+              }
+            </div>
+
+            <!-- Recipient Search -->
+            <div class="form-group recipient-search">
+              <label for="recipientSearch">To (Recipient)</label>
+              @if (selectedRecipient()) {
+                <div class="selected-recipient">
+                  <div class="recipient-info">
+                    <span class="recipient-name">
+                      @if (selectedRecipient()?.user) {
+                        {{ selectedRecipient()?.user?.firstName }} {{ selectedRecipient()?.user?.lastName }}
+                      } @else {
+                        Unknown
+                      }
+                    </span>
+                    <span class="recipient-account">****{{ selectedRecipient()?.accountBillNumber?.slice(-4) }}</span>
+                  </div>
+                  <button type="button" class="btn-clear" (click)="clearRecipient()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              } @else {
+                <div class="search-input-wrapper">
+                  <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                  </svg>
+                  <input
+                    type="text"
+                    id="recipientSearch"
+                    [formControl]="recipientSearchControl"
+                    placeholder="Search by recipient name..."
+                    class="form-control search-input"
+                  />
+                  @if (searchLoading()) {
+                    <div class="search-spinner"></div>
+                  }
+                </div>
+
+                <!-- Search Results Dropdown -->
+                @if (recipientSearchResults().length > 0) {
+                  <div class="search-results">
+                    @for (result of recipientSearchResults(); track result.uuid) {
+                      <div class="search-result-item" (click)="selectRecipient(result)">
+                        <div class="result-info">
+                          <span class="result-name">
+                            @if (result.user) {
+                              {{ result.user.firstName }} {{ result.user.lastName }}
+                            } @else {
+                              Unknown
+                            }
+                          </span>
+                          <span class="result-account">****{{ result.accountBillNumber.slice(-4) }}</span>
+                        </div>
+                        <span class="result-currency">{{ result.currency.name }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            </div>
+
+            <!-- Amount -->
+            <div class="form-group">
+              <label for="amount">Amount</label>
+              <input
+                type="number"
+                id="amount"
+                formControlName="amount"
+                placeholder="0.00"
+                class="form-control"
+                min="0.01"
+                step="0.01"
+              />
+              @if (transferForm.get('amount')?.invalid && transferForm.get('amount')?.touched) {
+                <span class="error-text">Please enter a valid amount (min: 0.01)</span>
+              }
+            </div>
+
+            <!-- Transfer Note -->
+            <div class="form-group">
+              <label for="note">Transfer Title/Note</label>
+              <input
+                type="text"
+                id="note"
+                formControlName="note"
+                placeholder="Enter transfer description..."
+                class="form-control"
+              />
+              @if (transferForm.get('note')?.invalid && transferForm.get('note')?.touched) {
+                <span class="error-text">Please enter a transfer note</span>
+              }
+            </div>
+
+            <!-- Language -->
+            <div class="form-group">
+              <label for="locale">Confirmation Language</label>
+              <select id="locale" formControlName="locale" class="form-control">
+                @for (lang of languages; track lang.value) {
+                  <option [value]="lang.value">{{ lang.label }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Error Message -->
+            @if (transferError()) {
+              <div class="error-message">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>{{ transferError() }}</span>
+              </div>
+            }
+          </form>
+        }
+      </div>
+
+      @if (!transferSuccess()) {
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closeTransferModal()" [disabled]="transferLoading()">
+            Cancel
+          </button>
+          <button
+            class="btn-primary"
+            (click)="submitTransfer()"
+            [disabled]="transferLoading() || !selectedRecipient() || transferForm.invalid"
+          >
+            @if (transferLoading()) {
+              <span class="btn-spinner"></span>
+              Processing...
+            } @else {
+              Create Transfer
+            }
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

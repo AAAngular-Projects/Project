@@ -2,8 +2,9 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { AdminService, AuthService } from '../../core/services';
+import { AdminService, AuthService, CurrencyService } from '../../core/services';
 import type { UserDto } from '../../core/services/admin.service';
+import type { CurrencyOption } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
@@ -15,6 +16,7 @@ import type { UserDto } from '../../core/services/admin.service';
 export class AdminComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly authService = inject(AuthService);
+  private readonly currencyService = inject(CurrencyService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -30,31 +32,31 @@ export class AdminComponent implements OnInit {
   showDeleteConfirm = signal<string | null>(null);
   showEditRoleModal = signal<UserDto | null>(null);
   selectedRole = signal<string>('');
-  
+
   // Search state
   searchQuery = signal<string>('');
   showAutocomplete = signal<boolean>(false);
-  
+
   // Filtered users based on search
   filteredUsers = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     const currentUserUuid = this.currentUser()?.uuid;
-    
+
     // First, exclude the current user
     const usersWithoutCurrent = this.users().filter(user => user.uuid !== currentUserUuid);
-    
+
     if (!query) {
       return usersWithoutCurrent;
     }
-    
+
     return usersWithoutCurrent.filter(user => {
       const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
       const email = user.email.toLowerCase();
       const role = this.getRoleLabel(user.userAuth?.role || '').toLowerCase();
-      
-      return fullName.includes(query) || 
-             email.includes(query) || 
-             role.includes(query);
+
+      return fullName.includes(query) ||
+        email.includes(query) ||
+        role.includes(query);
     });
   });
 
@@ -87,20 +89,20 @@ export class AdminComponent implements OnInit {
       })
       .slice(0, 5);
   });
-  
+
   // Autocomplete suggestions
   autocompleteSuggestions = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     if (!query || query.length < 2) {
       return [];
     }
-    
+
     const suggestions = new Set<string>();
     this.users().forEach(user => {
       const fullName = `${user.firstName} ${user.lastName}`;
       const email = user.email;
       const role = this.getRoleLabel(user.userAuth?.role || '');
-      
+
       if (fullName.toLowerCase().includes(query)) {
         suggestions.add(fullName);
       }
@@ -111,9 +113,12 @@ export class AdminComponent implements OnInit {
         suggestions.add(role);
       }
     });
-    
+
     return Array.from(suggestions).slice(0, 5);
   });
+
+  // Currencies
+  currencies = signal<CurrencyOption[]>([]);
 
   // Form data for creating new user
   newUser = signal({
@@ -121,7 +126,7 @@ export class AdminComponent implements OnInit {
     lastName: '',
     email: '',
     password: '',
-    currency: 'c0e8c3e5-dcab-4c77-879d-66c59794dfed' // Default USD currency
+    currency: ''
   });
 
   // Role types
@@ -138,8 +143,26 @@ export class AdminComponent implements OnInit {
         this.selectedTab.set(tab);
       }
     });
-    
+
     this.adminService.loadUsers();
+    this.loadCurrencies();
+  }
+
+  private loadCurrencies(): void {
+    this.currencyService.getAvailableCurrencies().subscribe({
+      next: (currencies) => {
+        this.currencies.set(currencies);
+        // Set default currency to USD if available, otherwise first currency
+        const usdCurrency = currencies.find(c => c.name.toUpperCase() === 'USD');
+        const defaultCurrency = usdCurrency || currencies[0];
+        if (defaultCurrency) {
+          this.newUser.set({ ...this.newUser(), currency: defaultCurrency.uuid });
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load currencies:', error);
+      }
+    });
   }
 
   switchTab(tab: 'overview' | 'users'): void {
@@ -197,7 +220,7 @@ export class AdminComponent implements OnInit {
   updateRole(): void {
     const user = this.showEditRoleModal();
     const newRole = this.selectedRole();
-    
+
     if (!user || !newRole) return;
 
     this.adminService.updateUserRole(user.uuid, newRole).subscribe({
@@ -263,24 +286,36 @@ export class AdminComponent implements OnInit {
   }
 
   openCreateUserModal(): void {
+    // Ensure default currency is set if not already
+    if (!this.newUser().currency) {
+      const currencies = this.currencies();
+      const usdCurrency = currencies.find(c => c.name.toUpperCase() === 'USD');
+      const defaultCurrency = usdCurrency || currencies[0];
+      if (defaultCurrency) {
+        this.newUser.set({ ...this.newUser(), currency: defaultCurrency.uuid });
+      }
+    }
     this.showCreateUserModal.set(true);
   }
 
   closeCreateUserModal(): void {
     this.showCreateUserModal.set(false);
-    // Reset form
+    // Reset form with default currency
+    const currencies = this.currencies();
+    const usdCurrency = currencies.find(c => c.name.toUpperCase() === 'USD');
+    const defaultCurrency = usdCurrency || currencies[0];
     this.newUser.set({
       firstName: '',
       lastName: '',
       email: '',
       password: '',
-      currency: 'c0e8c3e5-dcab-4c77-879d-66c59794dfed'
+      currency: defaultCurrency?.uuid || ''
     });
   }
 
   createUser(): void {
     const userData = this.newUser();
-    if (!userData.firstName || !userData.lastName || !userData.email || !userData.password) {
+    if (!userData.firstName || !userData.lastName || !userData.email || !userData.password || !userData.currency) {
       alert('Please fill in all fields');
       return;
     }

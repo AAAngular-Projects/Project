@@ -1,38 +1,74 @@
 import { Component, inject, signal, effect, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, DestroyRef } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { DashboardService, AuthService } from '../../core/services';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DashboardService, AuthService, AccountsService, TransactionService } from '../../core/services';
+import { Account, SearchBillResult, TransferLocale } from '../../core/models';
 import { Chart, registerables } from 'chart.js';
 import { ExchangeRateChartComponent } from './exchange-rate-chart/exchange-rate-chart.component';
+import { debounceTime, distinctUntilChanged, filter, switchMap, catchError } from 'rxjs/operators';
+import { of, Subject } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe, ExchangeRateChartComponent],
+  imports: [CommonModule, CurrencyPipe, DatePipe, ExchangeRateChartComponent, ReactiveFormsModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   private readonly authService = inject(AuthService);
+  private readonly accountsService = inject(AccountsService);
+  private readonly transactionService = inject(TransactionService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
-  
+  private readonly fb = inject(FormBuilder);
+
   @ViewChild('balanceChart', { static: false }) balanceChartRef!: ElementRef<HTMLCanvasElement>;
-  
+
   private chart: Chart | null = null;
-  
+
   // Resources from service (using Angular Resource API)
   accountBalance = this.dashboardService.accountBalance;
   availableFunds = this.dashboardService.availableFunds;
   bills = this.dashboardService.bills;
   balanceHistory = this.dashboardService.balanceHistory;
   recentTransactions = this.dashboardService.recentTransactions;
-  
+
   // Current user from auth service
   currentUser = this.authService.currentUser;
+
+  // Transfer modal signals
+  showTransferModal = signal(false);
+  senderAccounts = signal<Account[]>([]);
+  recipientSearchResults = signal<SearchBillResult[]>([]);
+  searchLoading = signal(false);
+  transferLoading = signal(false);
+  selectedRecipient = signal<SearchBillResult | null>(null);
+  transferError = signal<string | null>(null);
+  transferSuccess = signal(false);
+
+  // Transfer form
+  transferForm = this.fb.group({
+    senderBill: ['', Validators.required],
+    amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
+    note: ['', [Validators.required, Validators.minLength(1)]],
+    locale: [TransferLocale.EN as TransferLocale, Validators.required]
+  });
+
+  // Search control with debounce
+  recipientSearchControl = new FormControl('');
+
+  // Available languages for transfer
+  readonly languages = [
+    { value: TransferLocale.EN, label: 'English' },
+    { value: TransferLocale.DE, label: 'German' },
+    { value: TransferLocale.PL, label: 'Polish' }
+  ];
   
   constructor() {
     effect(() => {
@@ -42,6 +78,16 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           setTimeout(() => this.createOrUpdateChart(history), 100);
         }
       }
+    });
+
+    // Setup debounced recipient search
+    this.recipientSearchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      filter(value => !!value && value.length >= 2),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(searchTerm => {
+      this.onRecipientSearch(searchTerm!);
     });
   }
   
@@ -135,7 +181,111 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   
   makeTransfer(): void {
-    // TODO: Implement transfer functionality
-    console.log('Make transfer clicked');
+    this.openTransferModal();
+  }
+
+  openTransferModal(): void {
+    this.showTransferModal.set(true);
+    this.transferError.set(null);
+    this.transferSuccess.set(false);
+    this.selectedRecipient.set(null);
+    this.recipientSearchResults.set([]);
+    this.recipientSearchControl.setValue('');
+    this.transferForm.reset({ locale: TransferLocale.EN });
+
+    // Load user accounts
+    this.accountsService.getAccounts().subscribe({
+      next: (response) => {
+        this.senderAccounts.set(response.data);
+      },
+      error: (error) => {
+        console.error('Error loading accounts:', error);
+        this.transferError.set('Failed to load accounts');
+      }
+    });
+  }
+
+  closeTransferModal(): void {
+    this.showTransferModal.set(false);
+    this.transferForm.reset();
+    this.selectedRecipient.set(null);
+    this.recipientSearchResults.set([]);
+    this.transferError.set(null);
+    this.transferSuccess.set(false);
+  }
+
+  onRecipientSearch(searchTerm: string): void {
+    if (!searchTerm || searchTerm.length < 2) {
+      this.recipientSearchResults.set([]);
+      return;
+    }
+
+    this.searchLoading.set(true);
+    this.accountsService.searchBills(searchTerm).pipe(
+      catchError(error => {
+        console.error('Search error:', error);
+        return of({ data: [] });
+      })
+    ).subscribe({
+      next: (response) => {
+        this.recipientSearchResults.set(response.data);
+        this.searchLoading.set(false);
+      },
+      error: () => {
+        this.searchLoading.set(false);
+      }
+    });
+  }
+
+  selectRecipient(recipient: SearchBillResult): void {
+    this.selectedRecipient.set(recipient);
+    this.recipientSearchResults.set([]);
+    this.recipientSearchControl.setValue(recipient.accountBillNumber);
+  }
+
+  clearRecipient(): void {
+    this.selectedRecipient.set(null);
+    this.recipientSearchControl.setValue('');
+    this.recipientSearchResults.set([]);
+  }
+
+  submitTransfer(): void {
+    const recipient = this.selectedRecipient();
+    if (!recipient) {
+      this.transferError.set('Please select a recipient');
+      return;
+    }
+
+    if (this.transferForm.invalid) {
+      this.transferError.set('Please fill all required fields');
+      return;
+    }
+
+    const formValue = this.transferForm.value;
+    this.transferLoading.set(true);
+    this.transferError.set(null);
+
+    this.transactionService.createTransaction({
+      amountMoney: formValue.amount!,
+      transferTitle: formValue.note!,
+      senderBill: formValue.senderBill!,
+      recipientBill: recipient.accountBillNumber,
+      locale: formValue.locale!
+    }).subscribe({
+      next: () => {
+        this.transferLoading.set(false);
+        this.transferSuccess.set(true);
+        // Refresh dashboard data
+        this.dashboardService.loadDashboardData();
+        // Close modal after short delay
+        setTimeout(() => {
+          this.closeTransferModal();
+        }, 1500);
+      },
+      error: (error) => {
+        this.transferLoading.set(false);
+        this.transferError.set(error.error?.message || 'Transfer failed. Please try again.');
+      }
+    });
   }
 }

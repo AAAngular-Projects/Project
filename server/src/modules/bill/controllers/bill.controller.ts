@@ -21,6 +21,7 @@ import {
   BillsPageDto,
   BillsPageOptionsDto,
   CreateBillDto,
+  SearchBillsByUserOptionsDto,
   SearchBillsPayloadDto,
   TotalAccountBalanceHistoryPayloadDto,
   TotalAccountBalancePayloadDto,
@@ -112,6 +113,22 @@ export class BillController {
     @AuthUser() user: UserEntity,
   ): Promise<TotalAccountBalanceHistoryPayloadDto> {
     return this._billService.getTotalAccountBalanceHistory(user);
+  }
+
+  @Get('/searchByUser')
+  @Roles(RoleType.USER, RoleType.ADMIN, RoleType.ROOT)
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Search bills by user name (firstName or lastName)',
+    type: BillsPageDto,
+  })
+  async searchBillsByUser(
+    @Query(new ValidationPipe({ transform: true }))
+    searchOptions: SearchBillsByUserOptionsDto,
+    @AuthUser() user: UserEntity,
+  ): Promise<BillsPageDto> {
+    return this._billService.searchBillByUserName(searchOptions, user);
   }
 
   @Get('/:accountBillNumber/search')

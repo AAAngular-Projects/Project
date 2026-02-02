@@ -69,3 +69,35 @@ export interface NotificationQuery {
   take?: number;
   order?: 'ASC' | 'DESC';
 }
+
+// Transfer Feature Models
+
+export enum TransferLocale {
+  DE = 'de',
+  EN = 'en',
+  PL = 'pl',
+}
+
+export interface CreateTransactionRequest {
+  amountMoney: number;
+  transferTitle: string;
+  senderBill: string;
+  recipientBill: string;
+  locale: TransferLocale;
+}
+
+export interface CreateTransactionResponse {
+  uuid: string;
+}
+
+export interface SearchBillResult {
+  uuid: string;
+  accountBillNumber: string;
+  amountMoney?: string;
+  currency: { uuid: string; name: string; currentExchangeRate: number };
+  user?: { uuid: string; firstName: string; lastName: string };
+}
+
+export interface SearchBillsResponse {
+  data: SearchBillResult[];
+}
