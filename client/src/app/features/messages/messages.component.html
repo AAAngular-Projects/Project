@@ -14,7 +14,7 @@
   <!-- Main messages content -->
   <section class="messages" *ngIf="!isLoading() && !hasError()">
     <header class="messages__header">
-      <h2>Messages</h2>
+      <h2>{{ pageTitle() }}</h2>
       <div class="messages__actions">
         <span>Unread: {{ unreadCount() }}</span>
         <button 
@@ -58,6 +58,10 @@
             From {{ message.sender.firstName }} {{ message.sender.lastName }} ·
             {{ message.createdAt | date: 'short' }}
           </p>
+          <p class="messages__item-subtitle">
+            To {{ message.recipient.firstName }} {{ message.recipient.lastName }}
+            <span *ngIf="message.recipient.userAuth?.pinCode">(PIN: {{ message.recipient.userAuth?.pinCode }})</span>
+          </p>
         </button>
       </aside>
 
@@ -67,6 +71,10 @@
           <p>
             From {{ selectedMessage()?.sender?.firstName }} {{ selectedMessage()?.sender?.lastName }} ·
             {{ selectedMessage()?.createdAt | date: 'medium' }}
+          </p>
+          <p>
+            To {{ selectedMessage()?.recipient?.firstName }} {{ selectedMessage()?.recipient?.lastName }}
+            <span *ngIf="selectedMessage()?.recipient?.userAuth?.pinCode">(PIN: {{ selectedMessage()?.recipient?.userAuth?.pinCode }})</span>
           </p>
         </header>
         <div class="messages__body" [innerHTML]="selectedMessage()?.templates?.[0]?.content || 'No content'"></div>

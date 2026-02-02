@@ -68,6 +68,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
     const role = this.userRole();
     return role === RoleType.USER || role === RoleType.ADMIN || role === RoleType.ROOT;
   });
+  
+  // Page title based on user role
+  readonly pageTitle = computed(() => {
+    const role = this.userRole();
+    return role === RoleType.ADMIN || role === RoleType.ROOT ? 'Messages Sent' : 'Messages';
+  });
 
   // Form for creating messages (simplified)
   readonly createMessageForm: FormGroup = this.fb.group({
