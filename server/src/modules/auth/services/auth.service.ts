@@ -149,7 +149,7 @@ export class AuthService {
     pinCode,
     locale,
   }: UserForgottenPasswordDto): Promise<ForgottenPasswordPayloadDto> {
-    const user = await this._userService.getUser({ pinCode });
+    const user = await this._userAuthService.findUserAuth({ pinCode });
 
     if (!user) {
       throw new WrongCredentialsProvidedException();
@@ -168,7 +168,7 @@ export class AuthService {
     await this._userAuthForgottenPasswordService.createForgottenPassword({
       hashedToken,
       user,
-      emailAddress,
+      pinCode,
       locale,
     });
 

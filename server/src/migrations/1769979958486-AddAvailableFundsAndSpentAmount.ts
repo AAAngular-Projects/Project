@@ -4,7 +4,7 @@ export class AddAvailableFundsAndSpentAmount1769979958486 implements MigrationIn
     name = 'AddAvailableFundsAndSpentAmount1769979958486'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DROP INDEX "public"."IDX_currency_name_recorded_at"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_currency_name_recorded_at"`);
         await queryRunner.query(`CREATE TYPE "public"."budgets_category_enum" AS ENUM('FOOD', 'RENT', 'SHOPPING', 'UTILITIES', 'ENTERTAINMENT', 'TRANSPORTATION', 'HEALTHCARE', 'EDUCATION', 'TRAVEL', 'SAVINGS', 'INVESTMENT', 'OTHER')`);
         await queryRunner.query(`CREATE TABLE "budgets" ("id" SERIAL NOT NULL, "uuid" uuid NOT NULL DEFAULT uuid_generate_v4(), "category" "public"."budgets_category_enum" NOT NULL, "limit_amount" numeric(13,2) NOT NULL, "spent_amount" numeric(13,2) NOT NULL DEFAULT '0', "month" integer NOT NULL, "year" integer NOT NULL, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT now(), "user_id" integer NOT NULL, CONSTRAINT "PK_9c8a51748f82387644b773da482" PRIMARY KEY ("id")); COMMENT ON COLUMN "budgets"."month" IS 'Month (1-12)'; COMMENT ON COLUMN "budgets"."year" IS 'Year (e.g., 2026)'`);
         await queryRunner.query(`CREATE TYPE "public"."savings_goals_status_enum" AS ENUM('ACTIVE', 'COMPLETED', 'PAUSED', 'CANCELLED')`);
