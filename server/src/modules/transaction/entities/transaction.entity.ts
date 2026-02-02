@@ -1,4 +1,5 @@
 import { AbstractEntity } from 'common/entities';
+import { TransactionCategory } from 'common/constants';
 import { BillEntity } from 'modules/bill/entities';
 import { TransactionDto } from 'modules/transaction/dtos';
 import {
@@ -22,6 +23,14 @@ export class TransactionEntity extends AbstractEntity<TransactionDto> {
 
   @Column({ default: false })
   authorizationStatus: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: TransactionCategory,
+    default: TransactionCategory.OTHER,
+    nullable: true,
+  })
+  category?: TransactionCategory;
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

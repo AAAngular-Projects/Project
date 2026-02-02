@@ -8,11 +8,12 @@ import {
   MessagesPage,
   ReadMessagePayload,
 } from '../models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class MessageService {
   private readonly http = inject(HttpClient);
-  private readonly API_URL = 'http://localhost:4000/bank/Messages';
+  private readonly API_URL = `${environment.apiUrl}/Messages`;
 
   private readonly messagesSignal = signal<Message[]>([]);
   private readonly metaSignal = signal<MessagesPage['meta'] | null>(null);

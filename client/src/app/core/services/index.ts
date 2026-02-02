@@ -5,3 +5,7 @@ export * from './currency.service';
 export * from './dashboard.service';
 export * from './notification.service';
 export * from './admin.service';
+export * from './savings-goal.service';
+export * from './budget.service';
+export * from './transaction.service';
+export * from './accounts.service';

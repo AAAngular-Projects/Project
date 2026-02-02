@@ -1,0 +1,158 @@
+<section class="savings-goals-container">
+  <header class="page-header">
+    <h1>Savings Goals</h1>
+    <button (click)="toggleCreateForm()" class="btn-primary">
+      {{ showCreateForm() ? 'Cancel' : 'Create New Goal' }}
+    </button>
+  </header>
+
+  @if (showCreateForm()) {
+  <section class="create-form">
+    <h2>Create New Savings Goal</h2>
+    <div class="form-group">
+      <label for="goalName">Goal Name</label>
+      <input
+        id="goalName"
+        type="text"
+        [value]="newGoal().name"
+        (input)="onGoalNameInput($event)"
+        placeholder="e.g., Vacation Fund"
+      />
+    </div>
+    <div class="form-group">
+      <label for="goalDescription">Description (optional)</label>
+      <textarea
+        id="goalDescription"
+        [value]="newGoal().description"
+        (input)="onGoalDescriptionInput($event)"
+        placeholder="What are you saving for?"
+      ></textarea>
+    </div>
+    <div class="form-group">
+      <label for="targetAmount">Target Amount</label>
+      <input
+        id="targetAmount"
+        type="number"
+        [value]="newGoal().targetAmount"
+        (input)="onTargetAmountInput($event)"
+        min="0"
+        step="0.01"
+      />
+    </div>
+    <div class="form-group">
+      <label for="targetDate">Target Date (optional)</label>
+      <input
+        id="targetDate"
+        type="date"
+        (input)="onTargetDateInput($event)"
+      />
+    </div>
+    <button (click)="createSavingsGoal()" class="btn-success">Create Goal</button>
+  </section>
+  }
+
+  @if (isLoading()) {
+  <div class="loading">Loading savings goals...</div>
+  } @else {
+  <section class="goals-section">
+    <h2>Active Goals</h2>
+    @if (activeSavingsGoals().length === 0) {
+    <p class="empty-state">No active savings goals. Create one to get started!</p>
+    } @else {
+    <div class="goals-grid">
+      @for (goal of activeSavingsGoals(); track goal.id) {
+      <article class="goal-card">
+        <header class="goal-header">
+          <h3>{{ goal.name }}</h3>
+          <span class="status-badge active">Active</span>
+        </header>
+        @if (goal.description) {
+        <p class="goal-description">{{ goal.description }}</p>
+        }
+        <div class="goal-progress">
+          <div class="progress-info">
+            <span>{{ goal.currentAmount | number:'1.2-2' }} {{ goal.currency.name }}</span>
+            <span>{{ goal.targetAmount | number:'1.2-2' }} {{ goal.currency.name }}</span>
+          </div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="calculateProgress(goal)"
+            ></div>
+          </div>
+          <div class="progress-percentage">{{ calculateProgress(goal) }}%</div>
+        </div>
+        @if (goal.targetDate) {
+        <p class="target-date">Target: {{ goal.targetDate | date:'mediumDate' }}</p>
+        }
+        <div class="goal-actions">
+          <div class="action-group">
+            <input
+              type="number"
+              [value]="depositAmounts()[goal.uuid] || ''"
+              (input)="onDepositAmountInput(goal.uuid, $event)"
+              placeholder="Amount"
+              min="0"
+              step="0.01"
+              class="amount-input"
+            />
+            <button (click)="depositToGoal(goal.uuid)" class="btn-small btn-success">
+              Deposit
+            </button>
+          </div>
+          <div class="action-group">
+            <input
+              type="number"
+              [value]="withdrawAmounts()[goal.uuid] || ''"
+              (input)="onWithdrawAmountInput(goal.uuid, $event)"
+              placeholder="Amount"
+              min="0"
+              step="0.01"
+              class="amount-input"
+            />
+            <button (click)="withdrawFromGoal(goal.uuid)" class="btn-small btn-warning">
+              Withdraw
+            </button>
+          </div>
+          <button (click)="deleteGoal(goal.uuid)" class="btn-small btn-danger">
+            Delete
+          </button>
+        </div>
+      </article>
+      }
+    </div>
+    }
+  </section>
+
+  @if (completedSavingsGoals().length > 0) {
+  <section class="goals-section">
+    <h2>Completed Goals</h2>
+    <div class="goals-grid">
+      @for (goal of completedSavingsGoals(); track goal.id) {
+      <article class="goal-card completed">
+        <header class="goal-header">
+          <h3>{{ goal.name }}</h3>
+          <span class="status-badge completed">Completed</span>
+        </header>
+        <div class="goal-progress">
+          <div class="progress-info">
+            <span>{{ goal.currentAmount | number:'1.2-2' }} {{ goal.currency.name }}</span>
+            <span>{{ goal.targetAmount | number:'1.2-2' }} {{ goal.currency.name }}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill complete" style="width: 100%"></div>
+          </div>
+          <div class="progress-percentage">100%</div>
+        </div>
+        <div class="goal-actions">
+           <button (click)="deleteGoal(goal.uuid)" class="btn-small btn-danger">
+            Delete
+          </button>
+        </div>
+      </article>
+      }
+    </div>
+  </section>
+  }
+  }
+</section>

@@ -12,13 +12,14 @@ import {
   DashboardTransaction, 
   TransactionsResponse 
 } from '../models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DashboardService {
   private readonly http = inject(HttpClient);
-  private readonly API_URL = 'http://localhost:4000/bank';
+  private readonly API_URL = environment.apiUrl;
 
 
   accountBalance = signal<AccountBalance | null>(null);

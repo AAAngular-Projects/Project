@@ -145,6 +145,7 @@
   letter-spacing: 0.5px;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   transition: all 0.3s ease;
+  white-space: nowrap;
 
   svg {
     stroke: currentColor;
@@ -171,6 +172,7 @@
   padding: 0.5rem 0.75rem;
   background: #f3f4f6;
   border-radius: 8px;
+  white-space: nowrap;
 }
 
 .logout-btn {

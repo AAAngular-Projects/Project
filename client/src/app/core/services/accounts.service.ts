@@ -9,12 +9,13 @@ import {
   AccountTransactionsResponse,
   AccountType 
 } from '@core/models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AccountsService {
-  private readonly API_URL = 'http://localhost:4000/bank';
+  private readonly API_URL = environment.apiUrl;
   
   selectedAccountId = signal<string | null>(null);
 
