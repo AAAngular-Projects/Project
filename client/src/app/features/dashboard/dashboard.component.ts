@@ -7,10 +7,9 @@ import { Account, SearchBillResult, TransferLocale } from '../../core/models';
 import { Chart, registerables } from 'chart.js';
 import { ExchangeRateChartComponent } from './exchange-rate-chart/exchange-rate-chart.component';
 import { TransactionConfirmationComponent, TransactionSummary } from '@shared/components/transaction-confirmation/transaction-confirmation.component';
-import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, switchMap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError } from 'rxjs/operators';
 
 type TransferStep = 'form' | 'confirm' | 'success';
 
@@ -90,9 +89,19 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       debounceTime(300),
       distinctUntilChanged(),
       filter(value => !!value && value.length >= 2),
+      switchMap(searchTerm => {
+        this.searchLoading.set(true);
+        return this.accountsService.searchBills(searchTerm!).pipe(
+          catchError(error => {
+            console.error('Search error:', error);
+            return of({ data: [] as SearchBillResult[] });
+          })
+        );
+      }),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(searchTerm => {
-      this.onRecipientSearch(searchTerm!);
+    ).subscribe(response => {
+      this.recipientSearchResults.set(response.data);
+      this.searchLoading.set(false);
     });
   }
   
@@ -219,29 +228,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.recipientSearchResults.set([]);
     this.transferError.set(null);
     this.pendingTransaction.set(null);
-  }
-
-  onRecipientSearch(searchTerm: string): void {
-    if (!searchTerm || searchTerm.length < 2) {
-      this.recipientSearchResults.set([]);
-      return;
-    }
-
-    this.searchLoading.set(true);
-    this.accountsService.searchBills(searchTerm).pipe(
-      catchError(error => {
-        console.error('Search error:', error);
-        return of({ data: [] });
-      })
-    ).subscribe({
-      next: (response) => {
-        this.recipientSearchResults.set(response.data);
-        this.searchLoading.set(false);
-      },
-      error: () => {
-        this.searchLoading.set(false);
-      }
-    });
   }
 
   selectRecipient(recipient: SearchBillResult): void {
