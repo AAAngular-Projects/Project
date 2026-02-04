@@ -96,6 +96,7 @@ export class AccountDetailsComponent implements OnInit, OnDestroy, AfterViewInit
 
   constructor() {
     this.dateFromControl.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef),
       debounceTime(300),
       distinctUntilChanged()
     ).subscribe(val => {
@@ -105,6 +106,7 @@ export class AccountDetailsComponent implements OnInit, OnDestroy, AfterViewInit
     });
 
     this.dateToControl.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef),
       debounceTime(300),
       distinctUntilChanged()
     ).subscribe(val => {
@@ -113,7 +115,9 @@ export class AccountDetailsComponent implements OnInit, OnDestroy, AfterViewInit
       this.applyFilters();
     });
 
-    this.typeControl.valueChanges.subscribe(val => {
+    this.typeControl.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(val => {
       this.transactionType.set(val || undefined);
       this.page.set(1);
       this.applyFilters();

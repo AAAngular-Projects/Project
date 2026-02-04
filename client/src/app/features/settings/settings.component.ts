@@ -80,15 +80,19 @@ export class SettingsComponent implements OnInit {
   preferencesForm!: FormGroup;
   themeForm!: FormGroup;
 
+  // Signals for form states
+  private readonly profileFormInitialized = signal<boolean>(false);
+  private readonly securityFormInitialized = signal<boolean>(false);
+  
   // Computed: Check if profile form has changes
   readonly hasProfileChanges = computed(() => {
-    if (!this.profileForm) return false;
+    if (!this.profileFormInitialized() || !this.profileForm) return false;
     return this.profileForm.dirty && this.profileForm.valid;
   });
 
   // Computed: Check if any security changes
   readonly hasSecurityChanges = computed(() => {
-    if (!this.securityForm) return false;
+    if (!this.securityFormInitialized() || !this.securityForm) return false;
     return this.securityForm.dirty && this.securityForm.valid;
   });
 
@@ -127,37 +131,47 @@ export class SettingsComponent implements OnInit {
     this.preferencesForm = this.fb.group({
       lowBalanceThreshold: [prefs.lowBalanceThreshold, [Validators.min(0)]],
       monthlySpendingLimit: [prefs.monthlySpendingLimit, [Validators.min(0)]],
-      enableNotifications: [prefs.enableNotifications],
-      preferredTransactionView: [prefs.preferredTransactionView],
-      autoLogoutMinutes: [prefs.autoLogoutMinutes, [Validators.min(5), Validators.max(120)]],
-      enableTwoFactorAuth: [prefs.enableTwoFactorAuth]
+      autoLogoutMinutes: [prefs.autoLogoutMinutes, [Validators.min(5), Validators.max(120)]]
     });
 
     // Theme form
     const themeSettings = this.theme();
     this.themeForm = this.fb.group({
-      colorScheme: [themeSettings.colorScheme],
-      compactMode: [themeSettings.compactMode],
-      showAccountIcons: [themeSettings.showAccountIcons],
-      dashboardLayout: [themeSettings.dashboardLayout]
+      colorScheme: [themeSettings.colorScheme]
     });
+    
+    // Mark forms as initialized
+    this.profileFormInitialized.set(true);
+    this.securityFormInitialized.set(true);
 
     // Auto-save theme changes
     this.themeForm.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef),
       debounceTime(300)
-    ).subscribe(value => {
-      this.settingsService.updateTheme(value as ThemeSettings);
-      this.showTemporaryMessage('success', 'Theme updated');
+    ).subscribe({
+      next: (value) => {
+        this.settingsService.updateTheme(value as ThemeSettings);
+        this.showTemporaryMessage('success', 'Theme updated');
+      },
+      error: (err) => {
+        console.error('Theme update failed:', err);
+        this.showTemporaryMessage('error', 'Failed to update theme');
+      }
     });
 
     // Auto-save preference changes
     this.preferencesForm.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef),
       debounceTime(500)
-    ).subscribe(value => {
-      this.settingsService.updatePreferences(value as UserPreferences);
-      this.showTemporaryMessage('success', 'Preferences saved');
+    ).subscribe({
+      next: (value) => {
+        this.settingsService.updatePreferences(value as UserPreferences);
+        this.showTemporaryMessage('success', 'Preferences saved');
+      },
+      error: (err) => {
+        console.error('Preferences update failed:', err);
+        this.showTemporaryMessage('error', 'Failed to save preferences');
+      }
     });
   }
 

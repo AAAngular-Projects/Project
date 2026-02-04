@@ -6,17 +6,11 @@
 export interface UserPreferences {
   lowBalanceThreshold: number;
   monthlySpendingLimit: number;
-  enableNotifications: boolean;
-  preferredTransactionView: 'list' | 'cards';
   autoLogoutMinutes: number;
-  enableTwoFactorAuth: boolean;
 }
 
 export interface ThemeSettings {
   colorScheme: 'light' | 'dark' | 'auto';
-  compactMode: boolean;
-  showAccountIcons: boolean;
-  dashboardLayout: 'default' | 'minimal' | 'detailed';
 }
 
 export interface UserSettings {

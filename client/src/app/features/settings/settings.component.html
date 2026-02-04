@@ -111,11 +111,6 @@
               }
             </div>
 
-            <div class="form-group readonly-field">
-              <label>Account Created</label>
-              <p class="readonly-value">Member since {{ currentUser()?.uuid ? 'Account Active' : 'N/A' }}</p>
-            </div>
-
             <div class="form-actions">
               <button 
                 type="submit" 
@@ -275,31 +270,6 @@
                 <p class="help-text">Get warnings when approaching your spending limit</p>
               </div>
 
-              <div class="form-group toggle-group">
-                <label class="toggle-label">
-                  <input 
-                    type="checkbox" 
-                    formControlName="enableNotifications"
-                    class="toggle-input">
-                  <span class="toggle-switch"></span>
-                  <span class="toggle-text">Enable Push Notifications</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="preference-section">
-              <h3>Display Settings</h3>
-
-              <div class="form-group">
-                <label for="preferredTransactionView">Transaction View</label>
-                <select 
-                  id="preferredTransactionView" 
-                  formControlName="preferredTransactionView"
-                  class="form-control">
-                  <option value="list">List View</option>
-                  <option value="cards">Card View</option>
-                </select>
-              </div>
             </div>
 
             <div class="preference-section">
@@ -320,17 +290,6 @@
                 <p class="help-text">Automatically log out after this period of inactivity</p>
               </div>
 
-              <div class="form-group toggle-group">
-                <label class="toggle-label">
-                  <input 
-                    type="checkbox" 
-                    formControlName="enableTwoFactorAuth"
-                    class="toggle-input">
-                  <span class="toggle-switch"></span>
-                  <span class="toggle-text">Enable Two-Factor Authentication</span>
-                </label>
-                <p class="help-text">Add an extra layer of security to your account</p>
-              </div>
             </div>
           </form>
         </div>
@@ -385,44 +344,6 @@
               </div>
             </div>
 
-            <div class="preference-section">
-              <h3>Layout Options</h3>
-
-              <div class="form-group toggle-group">
-                <label class="toggle-label">
-                  <input 
-                    type="checkbox" 
-                    formControlName="compactMode"
-                    class="toggle-input">
-                  <span class="toggle-switch"></span>
-                  <span class="toggle-text">Compact Mode</span>
-                </label>
-                <p class="help-text">Reduce spacing for more content on screen</p>
-              </div>
-
-              <div class="form-group toggle-group">
-                <label class="toggle-label">
-                  <input 
-                    type="checkbox" 
-                    formControlName="showAccountIcons"
-                    class="toggle-input">
-                  <span class="toggle-switch"></span>
-                  <span class="toggle-text">Show Account Icons</span>
-                </label>
-              </div>
-
-              <div class="form-group">
-                <label for="dashboardLayout">Dashboard Layout</label>
-                <select 
-                  id="dashboardLayout" 
-                  formControlName="dashboardLayout"
-                  class="form-control">
-                  <option value="default">Default</option>
-                  <option value="minimal">Minimal</option>
-                  <option value="detailed">Detailed</option>
-                </select>
-              </div>
-            </div>
           </form>
 
           <div class="reset-section">

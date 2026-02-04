@@ -29,17 +29,11 @@ export class UserSettingsService {
   private readonly defaultPreferences: UserPreferences = {
     lowBalanceThreshold: 100,
     monthlySpendingLimit: 2000,
-    enableNotifications: true,
-    preferredTransactionView: 'list',
-    autoLogoutMinutes: 15,
-    enableTwoFactorAuth: false
+    autoLogoutMinutes: 15
   };
 
   private readonly defaultTheme: ThemeSettings = {
-    colorScheme: 'light',
-    compactMode: false,
-    showAccountIcons: true,
-    dashboardLayout: 'default'
+    colorScheme: 'light'
   };
 
   // Reactive state with signals
@@ -60,7 +54,7 @@ export class UserSettingsService {
   readonly isDarkMode = computed(() => {
     const scheme = this.themeSignal().colorScheme;
     if (scheme === 'auto') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
     return scheme === 'dark';
   });
@@ -73,16 +67,18 @@ export class UserSettingsService {
   constructor() {
     this.loadSettingsFromStorage();
     
-    // Apply theme when it changes
+    // Apply theme when it changes - use allowSignalWrites for DOM manipulation
     effect(() => {
       this.applyTheme(this.themeSignal());
-    });
+    }, { allowSignalWrites: true });
   }
 
   /**
    * Load settings from local storage on initialization
    */
   private loadSettingsFromStorage(): void {
+    if (typeof window === 'undefined') return;
+    
     const savedPreferences = localStorage.getItem('user_preferences');
     const savedTheme = localStorage.getItem('user_theme');
 
@@ -107,6 +103,8 @@ export class UserSettingsService {
    * Apply theme settings to the document
    */
   private applyTheme(theme: ThemeSettings): void {
+    if (typeof document === 'undefined') return;
+    
     const root = document.documentElement;
     
     // Apply color scheme
@@ -117,13 +115,6 @@ export class UserSettingsService {
     } else {
       root.classList.add('light-theme');
       root.classList.remove('dark-theme');
-    }
-
-    // Apply compact mode
-    if (theme.compactMode) {
-      root.classList.add('compact-mode');
-    } else {
-      root.classList.remove('compact-mode');
     }
   }
 
@@ -182,7 +173,9 @@ export class UserSettingsService {
   updatePreferences(preferences: Partial<UserPreferences>): void {
     const updated = { ...this.preferencesSignal(), ...preferences };
     this.preferencesSignal.set(updated);
-    localStorage.setItem('user_preferences', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user_preferences', JSON.stringify(updated));
+    }
   }
 
   /**
@@ -191,7 +184,9 @@ export class UserSettingsService {
   updateTheme(theme: Partial<ThemeSettings>): void {
     const updated = { ...this.themeSignal(), ...theme };
     this.themeSignal.set(updated);
-    localStorage.setItem('user_theme', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user_theme', JSON.stringify(updated));
+    }
   }
 
   /**
